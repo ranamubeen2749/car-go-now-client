@@ -91,14 +91,36 @@ export const assets = {
 export const menuLinks = [
     { name: "Home", path: "/" },
     { name: "Cars", path: "/cars" },
+    { name: "Drivers", path: "/drivers" },
     { name: "My Bookings", path: "/my-bookings" },
 ]
 
 export const ownerMenuLinks = [
     { name: "Dashboard", path: "/owner", icon: dashboardIcon, coloredIcon: dashboardIconColored },
-    { name: "Add car", path: "/owner/add-car", icon: addIcon, coloredIcon: addIconColored },
+    { name: "Add Car", path: "/owner/add-car", icon: addIcon, coloredIcon: addIconColored },
     { name: "Manage Cars", path: "/owner/manage-cars", icon: carIcon, coloredIcon: carIconColored },
+    { name: "Business Drivers", path: "/owner/business-drivers", icon: listIcon, coloredIcon: listIconColored },
     { name: "Manage Bookings", path: "/owner/manage-bookings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Platform Fees", path: "/owner/fees", icon: cautionIconColored, coloredIcon: cautionIconColored },
+    { name: "Bank Details", path: "/owner/bank-details", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Business Profile", path: "/owner/profile", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+]
+
+export const driverMenuLinks = [
+    { name: "Dashboard", path: "/driver", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+    { name: "Bookings", path: "/driver/bookings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Platform Fees", path: "/driver/fees", icon: cautionIconColored, coloredIcon: cautionIconColored },
+    { name: "Bank Details", path: "/driver/bank-details", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Profile", path: "/driver/profile", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+]
+
+export const adminMenuLinks = [
+    { name: "Dashboard", path: "/admin", icon: dashboardIcon, coloredIcon: dashboardIconColored },
+    { name: "Platform Fees", path: "/admin/fees", icon: cautionIconColored, coloredIcon: cautionIconColored },
+    { name: "Settings", path: "/admin/settings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Businesses", path: "/admin/businesses", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Drivers", path: "/admin/drivers", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Verifications", path: "/admin/verifications", icon: listIcon, coloredIcon: listIconColored },
 ]
 
 export const dummyUserData = {
