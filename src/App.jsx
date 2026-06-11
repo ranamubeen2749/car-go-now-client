@@ -42,7 +42,16 @@ import AdminFees from "./pages/admin/Fees";
 import AdminSettings from "./pages/admin/Settings";
 import AdminBusinesses from "./pages/admin/Businesses";
 import AdminDrivers from "./pages/admin/Drivers";
-import Verifications, { VerificationPlaceholder } from "./pages/admin/Verifications";
+import AdminCars from "./pages/admin/Cars";
+import AdminUsers from "./pages/admin/Users";
+import AdminBookings from "./pages/admin/Bookings";
+import Verifications, {
+    PendingCars,
+    PendingIndependentDrivers,
+    PendingLicenses,
+    PendingBookingPayments,
+    BusinessDriversInfo,
+} from "./pages/admin/Verifications";
 
 import { useAppContext } from "./context/AppContext";
 
@@ -120,61 +129,19 @@ const App = () => {
                     <Route path="settings" element={<AdminSettings />} />
                     <Route path="businesses" element={<AdminBusinesses />} />
                     <Route path="drivers" element={<AdminDrivers />} />
+                    <Route path="cars" element={<AdminCars />} />
+                    <Route path="users" element={<AdminUsers />} />
+                    <Route path="bookings" element={<AdminBookings />} />
                     <Route path="verifications" element={<Verifications />}>
-                        <Route
-                            index
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending cars"
-                                    endpoint="GET /api/admin/cars/pending"
-                                />
-                            }
-                        />
-                        <Route
-                            path="cars"
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending cars"
-                                    endpoint="GET /api/admin/cars/pending"
-                                />
-                            }
-                        />
-                        <Route
-                            path="business-drivers"
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending business drivers"
-                                    endpoint="GET /api/admin/business-drivers/pending"
-                                />
-                            }
-                        />
+                        <Route index element={<PendingCars />} />
+                        <Route path="cars" element={<PendingCars />} />
                         <Route
                             path="independent-drivers"
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending independent drivers"
-                                    endpoint="GET /api/admin/independent-drivers/pending"
-                                />
-                            }
+                            element={<PendingIndependentDrivers />}
                         />
-                        <Route
-                            path="renter-licenses"
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending renter licenses"
-                                    endpoint="GET /api/admin/licenses/pending"
-                                />
-                            }
-                        />
-                        <Route
-                            path="booking-payments"
-                            element={
-                                <VerificationPlaceholder
-                                    entity="Pending booking payment proofs"
-                                    endpoint="GET /api/admin/booking-payments/pending"
-                                />
-                            }
-                        />
+                        <Route path="renter-licenses" element={<PendingLicenses />} />
+                        <Route path="booking-payments" element={<PendingBookingPayments />} />
+                        <Route path="business-drivers" element={<BusinessDriversInfo />} />
                     </Route>
                 </Route>
             </Routes>

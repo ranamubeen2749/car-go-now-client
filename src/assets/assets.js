@@ -116,11 +116,14 @@ export const driverMenuLinks = [
 
 export const adminMenuLinks = [
     { name: "Dashboard", path: "/admin", icon: dashboardIcon, coloredIcon: dashboardIconColored },
-    { name: "Platform Fees", path: "/admin/fees", icon: cautionIconColored, coloredIcon: cautionIconColored },
-    { name: "Settings", path: "/admin/settings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Verifications", path: "/admin/verifications", icon: cautionIconColored, coloredIcon: cautionIconColored },
     { name: "Businesses", path: "/admin/businesses", icon: listIcon, coloredIcon: listIconColored },
     { name: "Drivers", path: "/admin/drivers", icon: listIcon, coloredIcon: listIconColored },
-    { name: "Verifications", path: "/admin/verifications", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Cars", path: "/admin/cars", icon: carIcon, coloredIcon: carIconColored },
+    { name: "Bookings", path: "/admin/bookings", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Users", path: "/admin/users", icon: listIcon, coloredIcon: listIconColored },
+    { name: "Platform Fees", path: "/admin/fees", icon: cautionIconColored, coloredIcon: cautionIconColored },
+    { name: "Settings", path: "/admin/settings", icon: listIcon, coloredIcon: listIconColored },
 ]
 
 export const dummyUserData = {
