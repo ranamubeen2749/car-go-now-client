@@ -12,12 +12,17 @@ const Layout = () => {
       navigate('/')
     }
   },[isOwner])
+
   return (
-    <div className='flex flex-col'>
+    <div className="h-screen flex flex-col overflow-hidden bg-white">
       <NavbarOwner />
-      <div className='flex'>
-        <Sidebar />
-        <Outlet />
+      <div className="flex flex-1 min-h-0">
+        <aside className="shrink-0 h-full overflow-hidden">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          <Outlet />
+        </main>
       </div>
     </div>
   )

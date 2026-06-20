@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { assets } from "../../assets/assets";
+import { assets, locationPlaceholder } from "../../assets/assets";
 import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
@@ -348,6 +348,7 @@ const EditCarModal = ({ car, onClose, onSaved }) => {
                                 type={type}
                                 value={form[key]}
                                 onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                                placeholder={key === "location" ? locationPlaceholder : ""}
                                 className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
                             />
                         </div>

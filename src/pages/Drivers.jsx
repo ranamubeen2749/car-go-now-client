@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Title from "../components/Title";
+import { locationPlaceholder } from "../assets/assets";
 import DriverCard from "../components/DriverCard";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
@@ -73,6 +74,7 @@ const Drivers = () => {
                         <input
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
+                            placeholder={locationPlaceholder}
                             className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
                         />
                     </div>

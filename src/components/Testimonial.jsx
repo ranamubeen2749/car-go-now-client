@@ -6,27 +6,27 @@ import { motion } from 'motion/react';
 const Testimonial = () => {
 
     const testimonials = [
-        { name: "Emma Rodriguez", 
-          location: "Barcelona, Spain", 
+        { name: "Ayesha Khan", 
+          location: "Lahore, Pakistan", 
           image: assets.testimonial_image_1, 
-          testimonial: "I've rented cars from various companies, but the experience with CarRental was exceptional." 
+          testimonial: "I've rented cars from various companies, but the experience with CarGoNow was exceptional." 
         },
-        { name: "John Smith", 
-          location: "New York, USA", 
+        { name: "Hassan Ali", 
+          location: "Karachi, Pakistan", 
           image: assets.testimonial_image_2, 
-          testimonial: "CarRental made my trip so much easier. The car was delivered right to my door, and the customer service was fantastic!" 
+          testimonial: "CarGoNow made my trip so much easier. The car was delivered right to my door, and the customer service was fantastic!" 
         },
-        { name: "Ava Johnson", 
-          location: "Sydney, Australia", 
+        { name: "Fatima Malik", 
+          location: "Islamabad, Pakistan", 
           image: assets.testimonial_image_1, 
-          testimonial: "I highly recommend CarRental! Their fleet is amazing, and I always feel like I'm getting the best deal with excellent service." 
+          testimonial: "I highly recommend CarGoNow! Their fleet is amazing, and I always feel like I'm getting the best deal with excellent service." 
         }
     ];
 
   return (
     <div className="py-28 px-6 md:px-16 lg:px-24 xl:px-44">
             
-           <Title title="What Our Customers Say" subTitle="Discover why discerning travelers choose StayVenture for their luxury accommodations around the world."/>
+           <Title title="What Our Customers Say" subTitle="Discover why travelers across Pakistan choose CarGoNow for reliable car rentals and professional drivers."/>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-18">
                 {testimonials.map((testimonial, index) => (

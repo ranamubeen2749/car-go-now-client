@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
+import { locationPlaceholder } from "../../assets/assets";
 import toast from "react-hot-toast";
 
 const BusinessProfile = () => {
@@ -77,17 +78,18 @@ const BusinessProfile = () => {
 
             <form onSubmit={handleSave} className="max-w-xl flex flex-col gap-4 mt-6 text-sm">
                 {[
-                    ["name", "Business Name"],
-                    ["phone", "Phone"],
-                    ["address", "Address"],
-                    ["city", "City"],
-                    ["country", "Country"],
-                ].map(([key, label]) => (
+                    ["name", "Business Name", ""],
+                    ["phone", "Phone", ""],
+                    ["address", "Address", "e.g. Main Boulevard, Gulberg III"],
+                    ["city", "City", locationPlaceholder],
+                    ["country", "Country", "Pakistan"],
+                ].map(([key, label, placeholder]) => (
                     <label key={key} className="block">
                         <span className="text-gray-500">{label}</span>
                         <input
                             value={form[key]}
                             onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                            placeholder={placeholder}
                             className="w-full border border-borderColor rounded-md p-2 mt-1 outline-none"
                         />
                     </label>

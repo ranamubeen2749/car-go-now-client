@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
+import { locationPlaceholder } from "../../assets/assets";
 import toast from "react-hot-toast";
 
 const Profile = () => {
@@ -84,6 +85,7 @@ const Profile = () => {
                     <input
                         value={form.city}
                         onChange={(e) => setForm({ ...form, city: e.target.value })}
+                        placeholder={locationPlaceholder}
                         className="w-full border border-borderColor rounded-md p-2 mt-1 outline-none"
                     />
                 </label>

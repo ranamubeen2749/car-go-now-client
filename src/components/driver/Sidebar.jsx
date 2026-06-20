@@ -4,17 +4,17 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
 
 const Sidebar = () => {
-    const { user } = useAppContext();
+    const { user, logout } = useAppContext();
     const location = useLocation();
 
     return (
-        <div className="relative min-h-screen md:flex flex-col items-center pt-8 max-w-13 md:max-w-60 w-full border-r border-borderColor text-sm">
+        <div className="h-full flex flex-col items-center pt-8 w-13 md:w-60 shrink-0 border-r border-borderColor text-sm bg-white overflow-y-auto">
             <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-semibold mx-auto">
                 {(user?.name || "D")[0]}
             </div>
             <p className="mt-2 text-base max-md:hidden">{user?.name}</p>
 
-            <div className="w-full">
+            <div className="w-full flex-1">
                 {driverMenuLinks.map((link, index) => (
                     <NavLink
                         key={index}
@@ -41,6 +41,13 @@ const Sidebar = () => {
                     </NavLink>
                 ))}
             </div>
+
+            <button
+                onClick={logout}
+                className="w-full py-3 px-4 mb-6 text-sm text-red-600 hover:bg-red-50 border-t border-borderColor"
+            >
+                Logout
+            </button>
         </div>
     );
 };

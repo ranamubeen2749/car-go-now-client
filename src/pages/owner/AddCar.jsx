@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Title from "../../components/owner/Title";
-import { assets } from "../../assets/assets";
+import { assets, locationPlaceholder } from "../../assets/assets";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 
@@ -281,7 +281,7 @@ const AddCar = () => {
                     <label>Location</label>
                     <input
                         type="text"
-                        placeholder="e.g. New York"
+                        placeholder={locationPlaceholder}
                         required
                         className="px-3 py-2 mt-1 border border-borderColor rounded-md outline-none"
                         value={car.location}

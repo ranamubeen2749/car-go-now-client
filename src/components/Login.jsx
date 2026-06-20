@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
+import { locationPlaceholder } from "../assets/assets";
 
 const ROLE_HOMES = {
     customer: "/",
@@ -42,7 +43,7 @@ const Login = () => {
     // Business only
     const [businessName, setBusinessName] = useState("");
     const [address, setAddress] = useState("");
-    const [country, setCountry] = useState("");
+    const [country, setCountry] = useState("Pakistan");
 
     // Driver only
     const [licenseNumber, setLicenseNumber] = useState("");
@@ -241,6 +242,7 @@ const Login = () => {
                                 <input
                                     onChange={(e) => setCity(e.target.value)}
                                     value={city}
+                                    placeholder={locationPlaceholder}
                                     className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
                                     type="text"
                                     required
@@ -252,6 +254,7 @@ const Login = () => {
                             <input
                                 onChange={(e) => setAddress(e.target.value)}
                                 value={address}
+                                placeholder="e.g. Main Boulevard, Gulberg III"
                                 className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
                                 type="text"
                                 required
@@ -262,6 +265,7 @@ const Login = () => {
                             <input
                                 onChange={(e) => setCountry(e.target.value)}
                                 value={country}
+                                placeholder="Pakistan"
                                 className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
                                 type="text"
                                 required
@@ -288,6 +292,7 @@ const Login = () => {
                                 <input
                                     onChange={(e) => setCity(e.target.value)}
                                     value={city}
+                                    placeholder={locationPlaceholder}
                                     className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
                                     type="text"
                                     required
