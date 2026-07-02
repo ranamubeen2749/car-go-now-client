@@ -18,7 +18,6 @@ const Businesses = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const status = searchParams.get("status") || "";
-    const isApprovedParam = searchParams.get("isApproved");
     const page = Number(searchParams.get("page") || 1);
 
     const [items, setItems] = useState([]);
@@ -33,8 +32,6 @@ const Businesses = () => {
         try {
             const params = { page, limit: 20 };
             if (status) params.status = status;
-            if (isApprovedParam !== null && isApprovedParam !== "")
-                params.isApproved = isApprovedParam;
             const { data } = await axios.get("/api/admin/businesses", { params });
             if (data.success) {
                 setItems(data.businesses || []);
@@ -45,7 +42,7 @@ const Businesses = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, page, status, isApprovedParam]);
+    }, [axios, page, status]);
 
     useEffect(() => {
         fetchList();
@@ -136,18 +133,6 @@ const Businesses = () => {
                         <option value="on_hold">On hold</option>
                     </select>
                 </label>
-                <label className="text-xs text-gray-500">
-                    Approval
-                    <select
-                        value={isApprovedParam ?? ""}
-                        onChange={(e) => updateParam("isApproved", e.target.value)}
-                        className="block mt-1 border border-borderColor rounded-md text-sm p-2"
-                    >
-                        <option value="">Any</option>
-                        <option value="true">Approved</option>
-                        <option value="false">Pending</option>
-                    </select>
-                </label>
                 <div className="ml-auto text-xs text-gray-500">
                     {pagination.total} total
                 </div>
@@ -160,7 +145,6 @@ const Businesses = () => {
                             <th className="p-3 text-left font-medium">Business</th>
                             <th className="p-3 text-left font-medium">Owner</th>
                             <th className="p-3 text-left font-medium">City</th>
-                            <th className="p-3 text-left font-medium">Approved</th>
                             <th className="p-3 text-left font-medium">Status</th>
                             <th className="p-3 text-left font-medium">Created</th>
                             <th className="p-3 text-left font-medium">Actions</th>
@@ -169,14 +153,14 @@ const Businesses = () => {
                     <tbody>
                         {loading && (
                             <tr>
-                                <td colSpan={7} className="p-6 text-center text-gray-500">
+                                <td colSpan={6} className="p-6 text-center text-gray-500">
                                     Loading…
                                 </td>
                             </tr>
                         )}
                         {!loading && items.length === 0 && (
                             <tr>
-                                <td colSpan={7} className="p-6 text-center text-gray-500">
+                                <td colSpan={6} className="p-6 text-center text-gray-500">
                                     No businesses match these filters.
                                 </td>
                             </tr>
@@ -193,26 +177,19 @@ const Businesses = () => {
                                     </td>
                                     <td className="p-3">{b.city || "—"}</td>
                                     <td className="p-3">
-                                        {b.isApproved ? (
-                                            <span className="text-green-700 text-xs">Yes</span>
-                                        ) : (
-                                            <span className="text-yellow-700 text-xs">Pending</span>
-                                        )}
-                                    </td>
-                                    <td className="p-3">
                                         <span
                                             className={`px-2 py-0.5 rounded-full text-xs ${
                                                 STATUS_COLORS[b.status] ||
                                                 "bg-gray-100 text-gray-600"
                                             }`}
                                         >
-                                            {b.status}
+                                            {b.status === "active" ? "Active" : b.status}
                                         </span>
                                     </td>
                                     <td className="p-3 text-xs">{fmtDate(b.createdAt)}</td>
                                     <td className="p-3 text-xs">
                                         <div className="flex gap-1 flex-wrap">
-                                            {!b.isApproved && (
+                                            {b.status !== "active" && (
                                                 <>
                                                     <button
                                                         onClick={() => approve(b)}
@@ -231,17 +208,17 @@ const Businesses = () => {
                                                     >
                                                         Reject
                                                     </button>
+                                                    {b.status === "blocked" && (
+                                                        <button
+                                                            onClick={() => unblock(b)}
+                                                            className="px-2 py-1 bg-green-600 text-white rounded"
+                                                        >
+                                                            Unblock
+                                                        </button>
+                                                    )}
                                                 </>
                                             )}
-                                            {b.isApproved && b.status === "blocked" && (
-                                                <button
-                                                    onClick={() => unblock(b)}
-                                                    className="px-2 py-1 bg-green-600 text-white rounded"
-                                                >
-                                                    Unblock
-                                                </button>
-                                            )}
-                                            {b.isApproved && b.status !== "blocked" && (
+                                            {b.status === "active" && (
                                                 <button
                                                     onClick={() =>
                                                         setActionModal({

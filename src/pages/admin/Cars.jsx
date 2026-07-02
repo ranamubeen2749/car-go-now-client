@@ -16,7 +16,7 @@ const Cars = () => {
     const { axios, currency } = useAppContext();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const isApproved = searchParams.get("isApproved") || "";
+    const verificationStatus = searchParams.get("verification_status") || "";
     const isAvailable = searchParams.get("isAvailable") ?? "";
     const page = Number(searchParams.get("page") || 1);
 
@@ -31,7 +31,7 @@ const Cars = () => {
         setLoading(true);
         try {
             const params = { page, limit: 20 };
-            if (isApproved) params.isApproved = isApproved;
+            if (verificationStatus) params.verification_status = verificationStatus;
             if (isAvailable !== "") params.isAvailable = isAvailable;
             const { data } = await axios.get("/api/admin/cars", { params });
             if (data.success) {
@@ -43,7 +43,7 @@ const Cars = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, page, isApproved, isAvailable]);
+    }, [axios, page, verificationStatus, isAvailable]);
 
     useEffect(() => {
         fetchList();
@@ -101,10 +101,10 @@ const Cars = () => {
 
             <div className="flex flex-wrap gap-3 items-end mt-6">
                 <label className="text-xs text-gray-500">
-                    Approval
+                    Verification
                     <select
-                        value={isApproved}
-                        onChange={(e) => updateParam("isApproved", e.target.value)}
+                        value={verificationStatus}
+                        onChange={(e) => updateParam("verification_status", e.target.value)}
                         className="block mt-1 border border-borderColor rounded-md text-sm p-2"
                     >
                         <option value="">All</option>
@@ -135,7 +135,7 @@ const Cars = () => {
                             <th className="p-3 text-left font-medium">Car</th>
                             <th className="p-3 text-left font-medium">Business</th>
                             <th className="p-3 text-left font-medium">Price/day</th>
-                            <th className="p-3 text-left font-medium">Approval</th>
+                            <th className="p-3 text-left font-medium">Verification</th>
                             <th className="p-3 text-left font-medium">Available</th>
                             <th className="p-3 text-left font-medium">Created</th>
                             <th className="p-3 text-left font-medium">Actions</th>
@@ -157,58 +157,55 @@ const Cars = () => {
                             </tr>
                         )}
                         {!loading &&
-                            items.map((c) => {
-                                const approvalKey = c.isApproved || c.verification_status;
-                                return (
-                                    <tr key={c._id} className="border-t border-borderColor">
-                                        <td className="p-3">
-                                            <div className="font-medium">
-                                                {c.brand} {c.model}
-                                            </div>
-                                            <div className="text-xs text-gray-500">{c.year}</div>
-                                        </td>
-                                        <td className="p-3">{c.business?.name || "—"}</td>
-                                        <td className="p-3">
-                                            {currency}
-                                            {c.pricePerDay}
-                                        </td>
-                                        <td className="p-3">
-                                            <span
-                                                className={`px-2 py-0.5 rounded-full text-xs ${
-                                                    STATUS_COLORS[approvalKey] ||
-                                                    "bg-gray-100 text-gray-600"
-                                                }`}
-                                            >
-                                                {approvalKey}
-                                            </span>
-                                        </td>
-                                        <td className="p-3 text-xs">
-                                            {c.isAvailable ? "Yes" : "No"}
-                                        </td>
-                                        <td className="p-3 text-xs">{fmtDate(c.createdAt)}</td>
-                                        <td className="p-3 text-xs">
-                                            <div className="flex gap-1 flex-wrap">
-                                                {approvalKey !== "approved" && (
-                                                    <button
-                                                        onClick={() => approve(c)}
-                                                        className="px-2 py-1 bg-green-600 text-white rounded"
-                                                    >
-                                                        Approve
-                                                    </button>
-                                                )}
-                                                {approvalKey !== "rejected" && (
-                                                    <button
-                                                        onClick={() => setRejectTarget(c)}
-                                                        className="px-2 py-1 bg-red-500 text-white rounded"
-                                                    >
-                                                        Reject
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
+                            items.map((c) => (
+                                <tr key={c._id} className="border-t border-borderColor">
+                                    <td className="p-3">
+                                        <div className="font-medium">
+                                            {c.brand} {c.model}
+                                        </div>
+                                        <div className="text-xs text-gray-500">{c.year}</div>
+                                    </td>
+                                    <td className="p-3">{c.business?.name || "—"}</td>
+                                    <td className="p-3">
+                                        {currency}
+                                        {c.pricePerDay}
+                                    </td>
+                                    <td className="p-3">
+                                        <span
+                                            className={`px-2 py-0.5 rounded-full text-xs ${
+                                                STATUS_COLORS[c.verification_status] ||
+                                                "bg-gray-100 text-gray-600"
+                                            }`}
+                                        >
+                                            {c.verification_status || "—"}
+                                        </span>
+                                    </td>
+                                    <td className="p-3 text-xs">
+                                        {c.isAvailable ? "Yes" : "No"}
+                                    </td>
+                                    <td className="p-3 text-xs">{fmtDate(c.createdAt)}</td>
+                                    <td className="p-3 text-xs">
+                                        <div className="flex gap-1 flex-wrap">
+                                            {c.verification_status !== "approved" && (
+                                                <button
+                                                    onClick={() => approve(c)}
+                                                    className="px-2 py-1 bg-green-600 text-white rounded"
+                                                >
+                                                    Approve
+                                                </button>
+                                            )}
+                                            {c.verification_status !== "rejected" && (
+                                                <button
+                                                    onClick={() => setRejectTarget(c)}
+                                                    className="px-2 py-1 bg-red-500 text-white rounded"
+                                                >
+                                                    Reject
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
             </div>

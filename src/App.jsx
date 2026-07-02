@@ -60,8 +60,9 @@ const App = () => {
     const path = useLocation().pathname;
     const hideShell =
         path.startsWith("/owner") ||
-        path.startsWith("/driver") ||
-        path.startsWith("/admin");
+        path.startsWith("/admin") ||
+        path === "/driver" ||
+        path.startsWith("/driver/");
 
     return (
         <>

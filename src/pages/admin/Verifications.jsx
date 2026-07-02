@@ -60,7 +60,7 @@ export const PendingCars = () => {
         setLoading(true);
         try {
             const { data } = await axios.get("/api/admin/cars", {
-                params: { isApproved: "pending", limit: 50 },
+                params: { verification_status: "pending", limit: 50 },
             });
             if (data.success) setItems(data.cars || []);
             else toast.error(data.message);
@@ -181,7 +181,7 @@ export const PendingIndependentDrivers = () => {
         setLoading(true);
         try {
             const { data } = await axios.get("/api/admin/drivers", {
-                params: { isApproved: "false", limit: 50 },
+                params: { verification_status: "pending", limit: 50 },
             });
             if (data.success) setItems(data.drivers || []);
             else toast.error(data.message);

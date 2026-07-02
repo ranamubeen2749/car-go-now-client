@@ -99,17 +99,17 @@ const Dashboard = () => {
                 <PendingCard
                     label="Businesses"
                     value={pendingApprovals?.businesses ?? 0}
-                    to="/admin/businesses?isApproved=false"
+                    to="/admin/businesses?status=blocked"
                 />
                 <PendingCard
                     label="Drivers"
                     value={pendingApprovals?.drivers ?? 0}
-                    to="/admin/drivers?isApproved=false"
+                    to="/admin/drivers?verification_status=pending"
                 />
                 <PendingCard
                     label="Cars"
                     value={pendingApprovals?.cars ?? 0}
-                    to="/admin/cars?isApproved=pending"
+                    to="/admin/cars?verification_status=pending"
                 />
                 <PendingCard
                     label="Licenses"

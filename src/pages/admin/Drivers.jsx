@@ -9,6 +9,12 @@ const STATUS_COLORS = {
     inactive: "bg-gray-100 text-gray-600",
 };
 
+const VERIFICATION_COLORS = {
+    pending: "bg-yellow-100 text-yellow-700",
+    approved: "bg-green-100 text-green-700",
+    rejected: "bg-red-100 text-red-700",
+};
+
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
 
 const Drivers = () => {
@@ -16,7 +22,7 @@ const Drivers = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const status = searchParams.get("status") || "";
-    const isApprovedParam = searchParams.get("isApproved");
+    const verificationStatus = searchParams.get("verification_status") || "";
     const page = Number(searchParams.get("page") || 1);
 
     const [items, setItems] = useState([]);
@@ -31,8 +37,7 @@ const Drivers = () => {
         try {
             const params = { page, limit: 20 };
             if (status) params.status = status;
-            if (isApprovedParam !== null && isApprovedParam !== "")
-                params.isApproved = isApprovedParam;
+            if (verificationStatus) params.verification_status = verificationStatus;
             const { data } = await axios.get("/api/admin/drivers", { params });
             if (data.success) {
                 setItems(data.drivers || []);
@@ -43,7 +48,7 @@ const Drivers = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, page, status, isApprovedParam]);
+    }, [axios, page, status, verificationStatus]);
 
     useEffect(() => {
         fetchList();
@@ -133,15 +138,16 @@ const Drivers = () => {
                     </select>
                 </label>
                 <label className="text-xs text-gray-500">
-                    Approval
+                    Verification
                     <select
-                        value={isApprovedParam ?? ""}
-                        onChange={(e) => updateParam("isApproved", e.target.value)}
+                        value={verificationStatus}
+                        onChange={(e) => updateParam("verification_status", e.target.value)}
                         className="block mt-1 border border-borderColor rounded-md text-sm p-2"
                     >
                         <option value="">Any</option>
-                        <option value="true">Approved</option>
-                        <option value="false">Pending</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
                     </select>
                 </label>
                 <div className="ml-auto text-xs text-gray-500">
@@ -157,7 +163,7 @@ const Drivers = () => {
                             <th className="p-3 text-left font-medium">User</th>
                             <th className="p-3 text-left font-medium">City</th>
                             <th className="p-3 text-left font-medium">Price/day</th>
-                            <th className="p-3 text-left font-medium">Approved</th>
+                            <th className="p-3 text-left font-medium">Verification</th>
                             <th className="p-3 text-left font-medium">Status</th>
                             <th className="p-3 text-left font-medium">Created</th>
                             <th className="p-3 text-left font-medium">Actions</th>
@@ -194,11 +200,14 @@ const Drivers = () => {
                                         {d.pricePerDay}
                                     </td>
                                     <td className="p-3">
-                                        {d.isApproved ? (
-                                            <span className="text-green-700 text-xs">Yes</span>
-                                        ) : (
-                                            <span className="text-yellow-700 text-xs">Pending</span>
-                                        )}
+                                        <span
+                                            className={`px-2 py-0.5 rounded-full text-xs ${
+                                                VERIFICATION_COLORS[d.verification_status] ||
+                                                "bg-gray-100 text-gray-600"
+                                            }`}
+                                        >
+                                            {d.verification_status || "—"}
+                                        </span>
                                     </td>
                                     <td className="p-3">
                                         <span
@@ -213,7 +222,7 @@ const Drivers = () => {
                                     <td className="p-3 text-xs">{fmtDate(d.createdAt)}</td>
                                     <td className="p-3 text-xs">
                                         <div className="flex gap-1 flex-wrap">
-                                            {!d.isApproved && (
+                                            {d.verification_status === "pending" && (
                                                 <>
                                                     <button
                                                         onClick={() => approve(d)}
@@ -234,7 +243,8 @@ const Drivers = () => {
                                                     </button>
                                                 </>
                                             )}
-                                            {d.isApproved && d.status === "inactive" && (
+                                            {d.verification_status === "approved" &&
+                                                d.status === "inactive" && (
                                                 <button
                                                     onClick={() => unblock(d)}
                                                     className="px-2 py-1 bg-green-600 text-white rounded"
@@ -242,7 +252,8 @@ const Drivers = () => {
                                                     Unblock
                                                 </button>
                                             )}
-                                            {d.isApproved && d.status === "active" && (
+                                            {d.verification_status === "approved" &&
+                                                d.status === "active" && (
                                                 <button
                                                     onClick={() =>
                                                         setActionModal({
