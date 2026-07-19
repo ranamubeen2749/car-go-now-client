@@ -8,7 +8,7 @@ import {MotionConfig} from 'motion/react'
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AppProvider>
-      <MotionConfig viewport={{once: true}}>
+      <MotionConfig viewport={{once: true}} reducedMotion="user">
         <App />
       </MotionConfig>
     </AppProvider>

@@ -1,119 +1,61 @@
-import React from 'react'
-import { assets } from '../assets/assets'
-import { motion } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import Brand from "./Brand";
 
 const Footer = () => {
-  return (
-    <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-    
-    className='px-6 md:px-16 lg:px-24 xl:px-32 mt-60 text-sm text-gray-500'>
+    const year = new Date().getFullYear();
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-            
-            className='flex flex-wrap justify-between items-start gap-8 pb-6 border-borderColor border-b'>
-                <div>
-                      <Link to='/'>
-       <h2 className='font-bold text-2xl'>Car <span className='text-primary'>Go Now</span>
-       </h2>
-            {/* <motion.img whileHover={{scale: 1.05}} src={assets.logo} alt="logo" className="h-8"/> */}
-        </Link>
-                    {/* <motion.img 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+    return (
+        <footer className="mt-24 border-t border-borderColor bg-white">
+            <div className="mx-auto max-w-[1440px] px-6 py-12 lg:px-10 xl:px-14">
+                <div className="grid gap-10 border-b border-borderColor pb-10 md:grid-cols-[1.4fr_1fr_1fr]">
+                    <div>
+                        <Brand />
+                        <p className="mt-4 max-w-md text-sm leading-6 text-muted">
+                            Book verified cars and professional drivers across Pakistan with
+                            clear pricing and dependable support.
+                        </p>
+                    </div>
 
-                    src={assets.logo} alt="logo" className='h-8 md:h-9' /> */}
+                    <div>
+                        <h2 className="text-sm font-semibold text-ink">Explore</h2>
+                        <nav className="mt-4 flex flex-col items-start gap-3 text-sm text-muted">
+                            <Link className="hover:text-primary" to="/cars">
+                                Browse cars
+                            </Link>
+                            <Link className="hover:text-primary" to="/drivers">
+                                Find a driver
+                            </Link>
+                            <Link className="hover:text-primary" to="/my-bookings">
+                                My bookings
+                            </Link>
+                            <Link className="hover:text-primary" to="/account/license">
+                                Driving license
+                            </Link>
+                        </nav>
+                    </div>
 
-                    <motion.p 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
-
-                    className='max-w-80 mt-3'>
-                        Premium car rental service with a wide selection of luxury and everyday vehicles for all your driving needs.
-                    </motion.p>
-                    <motion.div 
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.5 }}
-                    
-                    className='flex items-center gap-3 mt-6'>
-                        <a href="#"> <img src={assets.facebook_logo} className='w-5 h-5' alt="" /> </a>
-                        <a href="#"> <img src={assets.instagram_logo} className='w-5 h-5' alt="" /> </a>
-                        <a href="#"> <img src={assets.twitter_logo} className='w-5 h-5' alt="" /> </a>
-                        <a href="#"> <img src={assets.gmail_logo} className='w-5 h-5' alt="" /> </a>
-                    </motion.div>
+                    <div>
+                        <h2 className="text-sm font-semibold text-ink">Contact</h2>
+                        <address className="mt-4 space-y-2 text-sm not-italic leading-6 text-muted">
+                            <p>Main Boulevard, Gulberg III</p>
+                            <p>Lahore, Pakistan</p>
+                            <a className="block hover:text-primary" href="tel:+923001234567">
+                                +92 300 1234567
+                            </a>
+                            <a className="block hover:text-primary" href="mailto:info@cargonow.pk">
+                                info@cargonow.pk
+                            </a>
+                        </address>
+                    </div>
                 </div>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-
-                className='flex flex-wrap justify-between w-1/2 gap-8'>
-
-                <div>
-                    <h2 className='text-base font-medium text-gray-800 uppercase'>Quick Links</h2>
-                    <ul className='mt-3 flex flex-col gap-1.5'>
-                        <li><a href="#">Home</a></li>
-                        <li><a href="#">Browse Cars</a></li>
-                        <li><a href="#">List Your Car</a></li>
-                        <li><a href="#">About Us</a></li>
-                    </ul>
+                <div className="flex flex-col gap-2 pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
+                    <p>© {year} Car Go Now. All rights reserved.</p>
+                    <p>Cars and drivers are subject to verification and availability.</p>
                 </div>
+            </div>
+        </footer>
+    );
+};
 
-                <div>
-                    <h2 className='text-base font-medium text-gray-800 uppercase'>Resources</h2>
-                    <ul className='mt-3 flex flex-col gap-1.5'>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Insurance</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h2 className='text-base font-medium text-gray-800 uppercase'>Contact</h2>
-                    <ul className='mt-3 flex flex-col gap-1.5'>
-                        <li>Office 12, Main Boulevard, Gulberg III</li>
-                        <li>Lahore, Pakistan</li>
-                        <li>+92 300 1234567</li>
-                        <li>info@cargonow.pk</li>
-                    </ul>
-                </div>
-
-                </motion.div>
-                
-
-                  
-                
-
-            </motion.div>
-            
-            <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.6 }}
-                
-            className='flex flex-col md:flex-row gap-2 items-center justify-between py-5'>
-                <p>© {new Date().getFullYear()} CarGoNow. All rights reserved.</p>
-                <ul className='flex items-center gap-4'>
-                    <li><a href="#">Privacy</a></li>
-                    <li>|</li>
-                    <li><a href="#">Terms</a></li>
-                    <li>|</li>
-                    <li><a href="#">Cookies</a></li>
-                </ul>
-            </motion.div>
-        </motion.div>
-  )
-}
-
-export default Footer
+export default Footer;

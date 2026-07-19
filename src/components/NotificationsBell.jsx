@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
@@ -62,11 +62,22 @@ const NotificationsBell = () => {
     const ref = useRef(null);
 
     useEffect(() => {
-        const close = (e) => {
-            if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+        const close = (event) => {
+            if (event.key === "Escape") setOpen(false);
+            if (
+                event.type === "mousedown" &&
+                ref.current &&
+                !ref.current.contains(event.target)
+            ) {
+                setOpen(false);
+            }
         };
         document.addEventListener("mousedown", close);
-        return () => document.removeEventListener("mousedown", close);
+        document.addEventListener("keydown", close);
+        return () => {
+            document.removeEventListener("mousedown", close);
+            document.removeEventListener("keydown", close);
+        };
     }, []);
 
     const fetchUnread = useCallback(async () => {
@@ -151,9 +162,13 @@ const NotificationsBell = () => {
     return (
         <div className="relative" ref={ref}>
             <button
+                type="button"
                 onClick={() => setOpen((v) => !v)}
-                className="relative p-1.5 rounded-full hover:bg-gray-100"
+                className="ui-icon-button relative"
                 title="Notifications"
+                aria-label={`Notifications${unread ? `, ${unread} unread` : ""}`}
+                aria-expanded={open}
+                aria-haspopup="dialog"
             >
                 <svg
                     width="18"
@@ -169,60 +184,89 @@ const NotificationsBell = () => {
                     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
                 </svg>
                 {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
                         {unread > 9 ? "9+" : unread}
                     </span>
                 )}
             </button>
             {open && (
-                <div className="absolute right-0 mt-2 w-80 bg-white border border-borderColor rounded-md shadow-lg z-50">
-                    <div className="px-4 py-2 border-b border-borderColor flex items-center justify-between">
-                        <div className="text-sm font-medium">Notifications</div>
+                <div
+                    role="dialog"
+                    aria-label="Notifications"
+                    className="fixed inset-x-4 top-20 z-50 overflow-hidden rounded-2xl border border-borderColor bg-white shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-auto sm:mt-2 sm:w-96"
+                >
+                    <div className="flex min-h-13 items-center justify-between border-b border-borderColor px-4">
+                        <div>
+                            <div className="text-sm font-semibold text-ink">Notifications</div>
+                            <div className="text-[11px] text-muted">
+                                {unread ? `${unread} unread` : "You are all caught up"}
+                            </div>
+                        </div>
                         {items.some((n) => !n.isRead) && (
                             <button
+                                type="button"
                                 onClick={markAllRead}
-                                className="text-xs text-primary hover:underline"
+                                className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/8"
                             >
                                 Mark all read
                             </button>
                         )}
                     </div>
                     {loading ? (
-                        <div className="p-4 text-xs text-gray-500">Loading…</div>
+                        <div className="p-6 text-center text-sm text-muted" role="status">
+                            Loading…
+                        </div>
                     ) : items.length === 0 ? (
-                        <div className="p-4 text-xs text-gray-500">No notifications.</div>
+                        <div className="p-8 text-center">
+                            <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-slate-100 text-muted">
+                                <BellIcon />
+                            </div>
+                            <p className="mt-3 text-sm font-semibold text-ink">No notifications</p>
+                            <p className="mt-1 text-xs text-muted">
+                                Booking and account updates will appear here.
+                            </p>
+                        </div>
                     ) : (
-                        <div className="max-h-96 overflow-auto">
+                        <div className="max-h-[min(60vh,28rem)] overflow-auto">
                             {items.map((n) => {
                                 const link = TYPE_LINK(n.entityType, currentRole);
                                 const content = (
                                     <div
-                                        className={`px-4 py-3 text-sm border-b border-borderColor last:border-b-0 ${
-                                            n.isRead ? "text-gray-500" : "bg-blue-50/40"
+                                        className={`border-b border-borderColor px-4 py-3 text-sm last:border-b-0 ${
+                                            n.isRead
+                                                ? "text-muted hover:bg-slate-50"
+                                                : "bg-primary/[0.045] text-ink hover:bg-primary/[0.07]"
                                         }`}
                                     >
-                                        <div className="flex justify-between items-start gap-2">
-                                            <div className="flex-1">
-                                                <div className={n.isRead ? "" : "font-medium"}>
+                                        <div className="flex items-start gap-3">
+                                            <span
+                                                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                                                    n.isRead ? "bg-slate-200" : "bg-primary"
+                                                }`}
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className={n.isRead ? "" : "font-semibold"}>
                                                     {n.title || "Notification"}
                                                 </div>
                                                 {n.body && (
-                                                    <div className="text-xs text-gray-500 mt-0.5">
+                                                    <div className="mt-0.5 text-xs leading-5 text-muted">
                                                         {n.body}
                                                     </div>
                                                 )}
-                                                <div className="text-[10px] text-gray-400 mt-1">
+                                                <div className="mt-1 text-[11px] text-slate-400">
                                                     {fmtRel(n.createdAt)}
                                                 </div>
                                             </div>
                                             <button
+                                                type="button"
                                                 onClick={(e) => {
                                                     e.preventDefault();
                                                     e.stopPropagation();
                                                     removeOne(n._id);
                                                 }}
-                                                className="text-gray-300 hover:text-red-500 text-xs"
+                                                className="grid h-7 w-7 shrink-0 place-items-center rounded-lg text-slate-300 hover:bg-red-50 hover:text-red-500"
                                                 title="Delete"
+                                                aria-label={`Delete ${n.title || "notification"}`}
                                             >
                                                 ×
                                             </button>
@@ -263,3 +307,10 @@ const NotificationsBell = () => {
 };
 
 export default NotificationsBell;
+
+const BellIcon = () => (
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+);

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
-import { assets, menuLinks } from "../assets/assets";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAppContext } from "../context/AppContext";
-import toast from "react-hot-toast";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import toast from "react-hot-toast";
+import { menuLinks } from "../assets/assets";
+import { useAppContext } from "../context/AppContext";
+import Brand from "./Brand";
 import NotificationsBell from "./NotificationsBell";
 
 const ROLE_LABELS = {
@@ -21,168 +22,312 @@ const ROLE_HOMES = {
 };
 
 const Navbar = () => {
-    const {
-        openLogin,
-        user,
-        logout,
-        hasRoles,
-        currentRole,
-        switchRole,
-    } = useAppContext();
-
+    const { openLogin, user, logout, hasRoles, currentRole, switchRole } = useAppContext();
     const location = useLocation();
     const navigate = useNavigate();
-    const [open, setOpen] = useState(false);
-    const [roleMenuOpen, setRoleMenuOpen] = useState(false);
     const roleMenuRef = useRef(null);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
     useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (roleMenuRef.current && !roleMenuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+        setRoleMenuOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        const close = (event) => {
+            if (event.key === "Escape") {
+                setMenuOpen(false);
+                setRoleMenuOpen(false);
+            }
+            if (
+                event.type === "mousedown" &&
+                roleMenuRef.current &&
+                !roleMenuRef.current.contains(event.target)
+            ) {
                 setRoleMenuOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener("keydown", close);
+        document.addEventListener("mousedown", close);
+        return () => {
+            document.removeEventListener("keydown", close);
+            document.removeEventListener("mousedown", close);
+        };
     }, []);
 
     const handleSwitchRole = async (role) => {
         setRoleMenuOpen(false);
         if (role === currentRole) return;
-        const ok = await switchRole(role);
-        if (ok) navigate(ROLE_HOMES[role] || "/");
+        if (await switchRole(role)) navigate(ROLE_HOMES[role] || "/");
     };
 
     const handleBecomeBusiness = () => {
-        if (!user) {
-            openLogin("register", "business");
-        } else {
-            toast("To register a business, please contact support or use a fresh account for now.");
-        }
+        if (!user) openLogin("register", "business");
+        else toast("Contact support to add a business role to this account.");
     };
 
     const handleBecomeDriver = () => {
-        if (!user) {
-            openLogin("register", "driver");
-        } else {
-            toast("To register as an independent driver, please contact support or use a fresh account for now.");
-        }
+        if (!user) openLogin("register", "driver");
+        else toast("Contact support to add a driver role to this account.");
     };
 
+    const dashboardAction =
+        currentRole === "business_owner"
+            ? ["Dashboard", "/owner"]
+            : currentRole === "independent_driver"
+              ? ["Driver Dashboard", "/driver"]
+              : currentRole === "super_admin"
+                ? ["Admin Panel", "/admin"]
+                : null;
+
     return (
-        <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className={`flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-600 border-b border-borderColor relative transition-all ${
-                location.pathname === "/" && "bg-light"
-            }`}
-        >
-            <Link to="/">
-                <h2 className="font-bold text-2xl">
-                    Car <span className="text-primary">Go Now</span>
-                </h2>
-            </Link>
-
-            <div
-                className={`max-sm:fixed max-sm:h-screen max-sm:w-full max-sm:top-16 max-sm:border-t border-borderColor right-0 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-8 max-sm:p-4 transition-all duration-300 z-45 ${
-                    location.pathname === "/" ? "bg-light" : "bg-white"
-                } ${open ? "max-sm:translate-x-0" : "max-sm:translate-x-full"}`}
+        <>
+            <motion.header
+                initial={{ y: -12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.28 }}
+                className="sticky top-0 z-40 border-b border-borderColor bg-white/95 shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur"
             >
-                {menuLinks.map((link, index) => (
-                    <Link key={index} to={link.path}>
-                        {link.name}
-                    </Link>
-                ))}
+                <div className="mx-auto flex h-18 max-w-[1440px] items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-14">
+                    <Brand />
 
-                <div className="hidden lg:flex items-center text-sm gap-2 border border-borderColor px-3 rounded-full max-w-56">
-                    <input
-                        type="text"
-                        className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
-                        placeholder="Search cars"
-                    />
-                    <img src={assets.search_icon} alt="search" />
-                </div>
-
-                <div className="flex max-sm:flex-col items-start sm:items-center gap-4">
-                    {user && <NotificationsBell />}
-
-                    {/* Role switcher when user has multiple roles */}
-                    {user && hasRoles.length > 1 && (
-                        <div className="relative" ref={roleMenuRef}>
-                            <button
-                                onClick={() => setRoleMenuOpen((v) => !v)}
-                                className="cursor-pointer px-3 py-1.5 border border-borderColor rounded-md text-sm"
+                    <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
+                        {menuLinks.map((link) => (
+                            <NavLink
+                                key={link.path}
+                                to={link.path}
+                                className={({ isActive }) =>
+                                    `rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
+                                        isActive
+                                            ? "bg-primary/8 text-primary"
+                                            : "text-slate-600 hover:bg-slate-100 hover:text-ink"
+                                    }`
+                                }
                             >
-                                {ROLE_LABELS[currentRole] || "Switch role"} ▾
+                                {link.name}
+                            </NavLink>
+                        ))}
+                    </nav>
+
+                    <div className="hidden items-center gap-2 lg:flex">
+                        {user && <NotificationsBell />}
+
+                        {user && hasRoles.length > 1 && (
+                            <div className="relative" ref={roleMenuRef}>
+                                <button
+                                    type="button"
+                                    onClick={() => setRoleMenuOpen((value) => !value)}
+                                    className="ui-button ui-button-secondary"
+                                    aria-haspopup="menu"
+                                    aria-expanded={roleMenuOpen}
+                                >
+                                    {ROLE_LABELS[currentRole] || "Switch role"}
+                                    <ChevronIcon />
+                                </button>
+                                {roleMenuOpen && (
+                                    <div
+                                        role="menu"
+                                        className="absolute right-0 mt-2 w-56 rounded-2xl border border-borderColor bg-white p-2 shadow-xl"
+                                    >
+                                        {hasRoles.map((role) => (
+                                            <button
+                                                type="button"
+                                                role="menuitem"
+                                                key={role}
+                                                onClick={() => handleSwitchRole(role)}
+                                                className={`block w-full rounded-xl px-3 py-2 text-left text-sm font-medium ${
+                                                    role === currentRole
+                                                        ? "bg-primary/8 text-primary"
+                                                        : "text-slate-600 hover:bg-slate-100"
+                                                }`}
+                                            >
+                                                {ROLE_LABELS[role] || role}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {dashboardAction && (
+                            <button
+                                type="button"
+                                onClick={() => navigate(dashboardAction[1])}
+                                className="ui-button ui-button-secondary"
+                            >
+                                {dashboardAction[0]}
                             </button>
-                            {roleMenuOpen && (
-                                <div className="absolute right-0 mt-2 w-56 bg-white border border-borderColor rounded-md shadow-lg overflow-hidden z-50">
-                                    {hasRoles.map((role) => (
-                                        <button
-                                            key={role}
-                                            onClick={() => handleSwitchRole(role)}
-                                            className={`block w-full text-left px-4 py-2 text-sm hover:bg-light ${
-                                                role === currentRole ? "bg-primary/10 text-primary font-medium" : ""
-                                            }`}
-                                        >
-                                            {ROLE_LABELS[role] || role}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                        )}
+
+                        {!user && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleBecomeBusiness}
+                                    className="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-primary"
+                                >
+                                    List cars
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBecomeDriver}
+                                    className="px-3 py-2 text-sm font-semibold text-slate-600 hover:text-primary"
+                                >
+                                    Become a driver
+                                </button>
+                            </>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={() => (user ? logout() : openLogin("login", "customer"))}
+                            className="ui-button"
+                        >
+                            {user ? "Logout" : "Login"}
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2 lg:hidden">
+                        {user && <NotificationsBell />}
+                        <button
+                            type="button"
+                            onClick={() => setMenuOpen(true)}
+                            className="ui-icon-button"
+                            aria-label="Open navigation"
+                            aria-expanded={menuOpen}
+                        >
+                            <MenuIcon />
+                        </button>
+                    </div>
+                </div>
+            </motion.header>
+
+            {menuOpen && (
+                <button
+                    type="button"
+                    aria-label="Close navigation"
+                    onClick={() => setMenuOpen(false)}
+                    className="fixed inset-0 z-40 bg-ink/35 backdrop-blur-[1px] lg:hidden"
+                />
+            )}
+
+            {menuOpen && (
+                <aside className="fixed inset-y-0 right-0 z-50 flex w-[min(88vw,360px)] flex-col bg-white shadow-2xl lg:hidden">
+                    <div className="flex h-18 items-center justify-between border-b border-borderColor px-5">
+                        <Brand compact />
+                        <button
+                            type="button"
+                            onClick={() => setMenuOpen(false)}
+                            className="ui-icon-button"
+                            aria-label="Close navigation"
+                        >
+                            <CloseIcon />
+                        </button>
+                    </div>
+
+                    {user && (
+                        <div className="border-b border-borderColor px-5 py-4">
+                            <p className="text-sm font-semibold text-ink">{user.name}</p>
+                            <p className="text-xs text-muted">{ROLE_LABELS[currentRole]}</p>
                         </div>
                     )}
 
-                    {/* Quick dashboard link for the active role */}
-                    {user && currentRole === "business_owner" && (
-                        <button onClick={() => navigate("/owner")} className="cursor-pointer">
-                            Dashboard
-                        </button>
-                    )}
-                    {user && currentRole === "independent_driver" && (
-                        <button onClick={() => navigate("/driver")} className="cursor-pointer">
-                            Driver Dashboard
-                        </button>
-                    )}
-                    {user && currentRole === "super_admin" && (
-                        <button onClick={() => navigate("/admin")} className="cursor-pointer">
-                            Admin Panel
-                        </button>
-                    )}
-
-                    {/* "Become a..." links for users missing those roles */}
-                    {(!user || !hasRoles.includes("business_owner")) && (
-                        <button onClick={handleBecomeBusiness} className="cursor-pointer text-sm">
-                            List cars
-                        </button>
-                    )}
-                    {(!user || !hasRoles.includes("independent_driver")) && (
-                        <button onClick={handleBecomeDriver} className="cursor-pointer text-sm">
-                            Become a driver
-                        </button>
-                    )}
-
-                    <button
-                        onClick={() => {
-                            user ? logout() : openLogin("login", "customer");
-                        }}
-                        className="cursor-pointer px-8 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg"
+                    <nav
+                        className="flex-1 space-y-1 overflow-y-auto p-4"
+                        aria-label="Mobile navigation"
                     >
-                        {user ? "Logout" : "Login"}
-                    </button>
-                </div>
-            </div>
+                        {menuLinks.map((link) => (
+                            <NavLink
+                                key={link.path}
+                                to={link.path}
+                                className={({ isActive }) =>
+                                    `block rounded-xl px-4 py-3 text-sm font-semibold ${
+                                        isActive
+                                            ? "bg-primary text-white"
+                                            : "text-slate-600 hover:bg-slate-100"
+                                    }`
+                                }
+                            >
+                                {link.name}
+                            </NavLink>
+                        ))}
 
-            <button
-                className="sm:hidden cursor-pointer"
-                aria-label="Menu"
-                onClick={() => setOpen(!open)}
-            >
-                <img src={open ? assets.close_icon : assets.menu_icon} alt="menu" />
-            </button>
-        </motion.div>
+                        {dashboardAction && (
+                            <button
+                                type="button"
+                                onClick={() => navigate(dashboardAction[1])}
+                                className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                            >
+                                {dashboardAction[0]}
+                            </button>
+                        )}
+
+                        {user &&
+                            hasRoles
+                                .filter((role) => role !== currentRole)
+                                .map((role) => (
+                                    <button
+                                        type="button"
+                                        key={role}
+                                        onClick={() => handleSwitchRole(role)}
+                                        className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                                    >
+                                        Switch to {ROLE_LABELS[role] || role}
+                                    </button>
+                                ))}
+
+                        {!user && (
+                            <>
+                                <button
+                                    type="button"
+                                    onClick={handleBecomeBusiness}
+                                    className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                                >
+                                    List cars
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBecomeDriver}
+                                    className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                                >
+                                    Become a driver
+                                </button>
+                            </>
+                        )}
+                    </nav>
+
+                    <div className="border-t border-borderColor p-4">
+                        <button
+                            type="button"
+                            onClick={() => (user ? logout() : openLogin("login", "customer"))}
+                            className="ui-button w-full"
+                        >
+                            {user ? "Logout" : "Login"}
+                        </button>
+                    </div>
+                </aside>
+            )}
+        </>
     );
 };
+
+const MenuIcon = () => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+);
+
+const CloseIcon = () => (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
+);
+
+const ChevronIcon = () => (
+    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="m7 10 5 5 5-5" />
+    </svg>
+);
 
 export default Navbar;

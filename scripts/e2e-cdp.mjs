@@ -2,7 +2,6 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const CDP_URL = process.env.E2E_CDP_URL || "http://127.0.0.1:9222";
-const APP_URL = process.env.E2E_APP_URL || "http://127.0.0.1:5173";
 const API_URL = process.env.E2E_API_URL || "http://localhost:3002";
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "ranamubeen2749@gmail.com";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "test@123";
@@ -51,7 +50,6 @@ const requests = new Map();
 const traffic = [];
 const checks = [];
 let nextId = 1;
-let navigationId = 1;
 
 socket.onmessage = ({ data }) => {
     const message = JSON.parse(data);
@@ -142,14 +140,10 @@ const check = (name, condition, details = "") => {
 };
 
 const navigate = async (path, text) => {
-    const marker = `navigation-${navigationId++}`;
     await evaluate(`(() => {
-        document.documentElement.dataset.e2eNavigation = ${JSON.stringify(marker)};
-        location.href = ${JSON.stringify(`${APP_URL}${path}`)};
+        history.pushState({}, "", ${JSON.stringify(path)});
+        dispatchEvent(new PopStateEvent("popstate"));
     })()`);
-    await waitFor(
-        `document.documentElement.dataset.e2eNavigation !== ${JSON.stringify(marker)}`
-    );
     await waitFor(
         `location.pathname + location.search === ${JSON.stringify(path)}`
     );
@@ -313,7 +307,9 @@ await send("DOM.enable");
 
 try {
     await evaluate(`localStorage.clear()`);
-    await navigate("/", HOME_TEXT);
+    await send("Page.reload", { ignoreCache: true });
+    await waitFor(`document.readyState === "complete"`);
+    await waitFor(`document.body.innerText.includes(${JSON.stringify(HOME_TEXT)})`);
     check("Frontend and backend are live", (await readApi("/api/car/listings")).data.success);
 
     await openAuth(true);

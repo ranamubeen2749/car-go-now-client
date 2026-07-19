@@ -67,7 +67,19 @@ const App = () => {
 
     return (
         <>
-            <Toaster />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 3500,
+                    style: {
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "12px",
+                        boxShadow: "0 18px 45px rgba(15, 23, 42, 0.12)",
+                        color: "#0f172a",
+                        padding: "12px 14px",
+                    },
+                }}
+            />
             {showLogin && <Login />}
 
             {!hideShell && <Navbar />}

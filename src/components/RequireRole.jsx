@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
+import PageState from "./PageState";
 
 const RequireRole = ({ role, children }) => {
     const { user, authLoading, currentRole, hasRoles, openLogin, switchRole } =
@@ -22,19 +23,17 @@ const RequireRole = ({ role, children }) => {
     }, [authLoading, user, currentRole, role]);
 
     if (authLoading) {
-        return (
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 text-sm text-gray-500">
-                Restoring your session…
-            </div>
-        );
+        return <PageState title="Restoring your session" description="Checking your account access…" loading />;
     }
     if (!user) return <Navigate to="/" replace />;
     if (!hasRoles.includes(role)) return <Navigate to="/" replace />;
     if (currentRole !== role) {
         return (
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 text-sm text-gray-500">
-                Switching to {role.replace("_", " ")}…
-            </div>
+            <PageState
+                title={`Switching to ${role.replaceAll("_", " ")}`}
+                description="Your workspace will be ready in a moment."
+                loading
+            />
         );
     }
 

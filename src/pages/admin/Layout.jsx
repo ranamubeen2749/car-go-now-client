@@ -1,18 +1,8 @@
-import React from "react";
-import NavbarAdmin from "../../components/admin/NavbarAdmin";
-import Sidebar from "../../components/admin/Sidebar";
-import { Outlet } from "react-router-dom";
+import WorkspaceLayout from "../../components/WorkspaceLayout";
+import { adminMenuLinks } from "../../assets/assets";
 
 const Layout = () => {
-    return (
-        <div className="flex flex-col">
-            <NavbarAdmin />
-            <div className="flex">
-                <Sidebar />
-                <Outlet />
-            </div>
-        </div>
-    );
+    return <WorkspaceLayout label="Admin workspace" menuLinks={adminMenuLinks} />;
 };
 
 export default Layout;
