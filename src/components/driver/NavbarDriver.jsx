@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
+import NotificationsBell from "../NotificationsBell";
 
 const NavbarDriver = () => {
     const { user, logout } = useAppContext();
@@ -13,6 +14,7 @@ const NavbarDriver = () => {
                 </h2>
             </Link>
             <div className="flex items-center gap-4">
+                <NotificationsBell />
                 <p className="max-sm:hidden">Welcome, {user?.name || "Driver"}</p>
                 <button
                     onClick={logout}

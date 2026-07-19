@@ -97,9 +97,9 @@ const Dashboard = () => {
             <h2 className="mt-10 mb-3 font-medium">Pending approvals</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                 <PendingCard
-                    label="Businesses"
-                    value={pendingApprovals?.businesses ?? 0}
-                    to="/admin/businesses?status=blocked"
+                    label="Business drivers"
+                    value={pendingApprovals?.businessDrivers ?? 0}
+                    to="/admin/verifications/business-drivers"
                 />
                 <PendingCard
                     label="Drivers"
@@ -162,7 +162,7 @@ const Dashboard = () => {
                             <div className="font-medium">{u.name}</div>
                             <div className="text-xs text-gray-500">{u.email}</div>
                             <div className="text-xs text-gray-400">
-                                {u.activeRole} · {fmtDate(u.createdAt)}
+                                {u.currentRole || u.activeRole} · {fmtDate(u.createdAt)}
                             </div>
                         </>
                     )}

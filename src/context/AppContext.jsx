@@ -14,6 +14,7 @@ export const AppProvider = ({ children }) => {
     // Auth state
     const [token, setToken] = useState(localStorage.getItem("token") || null);
     const [user, setUser] = useState(null);
+    const [authLoading, setAuthLoading] = useState(Boolean(token));
 
     // UI state
     const [showLogin, setShowLogin] = useState(false);
@@ -92,6 +93,7 @@ export const AppProvider = ({ children }) => {
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);
+        setAuthLoading(false);
         delete axios.defaults.headers.common["Authorization"];
         toast.success("You have been logged out");
         navigate("/");
@@ -99,14 +101,26 @@ export const AppProvider = ({ children }) => {
 
     // Keep axios header in sync with token
     useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common["Authorization"] = token;
-            localStorage.setItem("token", token);
-            fetchUser();
-        } else {
-            delete axios.defaults.headers.common["Authorization"];
-            localStorage.removeItem("token");
-        }
+        let active = true;
+
+        const restoreSession = async () => {
+            if (token) {
+                setAuthLoading(true);
+                axios.defaults.headers.common["Authorization"] = token;
+                localStorage.setItem("token", token);
+                await fetchUser();
+            } else {
+                delete axios.defaults.headers.common["Authorization"];
+                localStorage.removeItem("token");
+            }
+
+            if (active) setAuthLoading(false);
+        };
+
+        restoreSession();
+        return () => {
+            active = false;
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token]);
 
@@ -119,6 +133,7 @@ export const AppProvider = ({ children }) => {
         setUser,
         token,
         setToken,
+        authLoading,
         fetchUser,
         logout,
         // role helpers

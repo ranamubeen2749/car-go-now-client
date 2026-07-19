@@ -3,14 +3,40 @@ import { Link } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
-const TYPE_LINK = (n) => {
-    switch (n.entityType) {
+const TYPE_LINK = (entityType, currentRole) => {
+    const isAdmin = currentRole === "super_admin";
+    const isOwner = currentRole === "business_owner";
+    const isDriver = currentRole === "independent_driver";
+
+    switch (entityType) {
         case "car_booking":
+            if (isAdmin) return "/admin/verifications/booking-payments";
+            if (isOwner) return "/owner/manage-bookings";
             return "/my-bookings";
         case "driver_booking":
+            if (isAdmin) return "/admin/verifications/booking-payments";
+            if (isDriver) return "/driver/bookings";
             return "/my-bookings";
         case "platform_fee":
+            if (isAdmin) return "/admin/fees";
+            if (isOwner) return "/owner/fees";
+            if (isDriver) return "/driver/fees";
             return null;
+        case "car":
+            if (isAdmin) return "/admin/verifications/cars";
+            if (isOwner) return "/owner/manage-cars";
+            return null;
+        case "business_driver":
+            if (isAdmin) return "/admin/verifications/business-drivers";
+            if (isOwner) return "/owner/business-drivers";
+            return null;
+        case "independent_driver":
+            if (isAdmin) return "/admin/verifications/independent-drivers";
+            if (isDriver) return "/driver/profile";
+            return null;
+        case "user":
+            if (isAdmin) return "/admin/verifications/renter-licenses";
+            return "/account/license";
         default:
             return null;
     }
@@ -28,12 +54,11 @@ const fmtRel = (d) => {
 };
 
 const NotificationsBell = () => {
-    const { axios, user } = useAppContext();
+    const { axios, user, currentRole } = useAppContext();
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState([]);
     const [unread, setUnread] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [supported, setSupported] = useState(true);
     const ref = useRef(null);
 
     useEffect(() => {
@@ -45,17 +70,17 @@ const NotificationsBell = () => {
     }, []);
 
     const fetchUnread = useCallback(async () => {
-        if (!user || !supported) return;
+        if (!user) return;
         try {
             const { data } = await axios.get("/api/notifications/unread-count");
             if (data?.success) setUnread(data.unreadCount || 0);
-        } catch (e) {
-            if (e?.response?.status === 404) setSupported(false);
+        } catch {
+            // Keep the bell mounted so a temporary API failure can recover on the next poll.
         }
-    }, [axios, user, supported]);
+    }, [axios, user]);
 
     const fetchList = useCallback(async () => {
-        if (!user || !supported) return;
+        if (!user) return;
         setLoading(true);
         try {
             const { data } = await axios.get("/api/notifications", {
@@ -64,22 +89,20 @@ const NotificationsBell = () => {
             if (data?.success) {
                 setItems(data.notifications || []);
                 setUnread(data.unreadCount || 0);
-            } else {
-                setSupported(false);
             }
-        } catch (e) {
-            if (e?.response?.status === 404) setSupported(false);
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to load notifications");
         } finally {
             setLoading(false);
         }
-    }, [axios, user, supported]);
+    }, [axios, user]);
 
     useEffect(() => {
-        if (!user || !supported) return;
+        if (!user) return;
         fetchUnread();
         const id = setInterval(fetchUnread, 30000);
         return () => clearInterval(id);
-    }, [user, supported, fetchUnread]);
+    }, [user, fetchUnread]);
 
     useEffect(() => {
         if (open) fetchList();
@@ -124,7 +147,6 @@ const NotificationsBell = () => {
     };
 
     if (!user) return null;
-    if (!supported) return null;
 
     return (
         <div className="relative" ref={ref}>
@@ -172,7 +194,7 @@ const NotificationsBell = () => {
                     ) : (
                         <div className="max-h-96 overflow-auto">
                             {items.map((n) => {
-                                const link = TYPE_LINK(n);
+                                const link = TYPE_LINK(n.entityType, currentRole);
                                 const content = (
                                     <div
                                         className={`px-4 py-3 text-sm border-b border-borderColor last:border-b-0 ${

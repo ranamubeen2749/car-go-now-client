@@ -11,7 +11,7 @@ const Users = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const isVerified = searchParams.get("isVerified") ?? "";
-    const activeRole = searchParams.get("activeRole") || "";
+    const currentRole = searchParams.get("currentRole") || "";
     const page = Number(searchParams.get("page") || 1);
 
     const [items, setItems] = useState([]);
@@ -23,7 +23,7 @@ const Users = () => {
         try {
             const params = { page, limit: 20 };
             if (isVerified !== "") params.isVerified = isVerified;
-            if (activeRole) params.activeRole = activeRole;
+            if (currentRole) params.currentRole = currentRole;
             const { data } = await axios.get("/api/admin/users", { params });
             if (data.success) {
                 setItems(data.users || []);
@@ -34,7 +34,7 @@ const Users = () => {
         } finally {
             setLoading(false);
         }
-    }, [axios, page, isVerified, activeRole]);
+    }, [axios, page, isVerified, currentRole]);
 
     useEffect(() => {
         fetchList();
@@ -59,8 +59,8 @@ const Users = () => {
                 <label className="text-xs text-gray-500">
                     Active role
                     <select
-                        value={activeRole}
-                        onChange={(e) => updateParam("activeRole", e.target.value)}
+                        value={currentRole}
+                        onChange={(e) => updateParam("currentRole", e.target.value)}
                         className="block mt-1 border border-borderColor rounded-md text-sm p-2"
                     >
                         <option value="">All</option>
@@ -120,7 +120,7 @@ const Users = () => {
                                     <td className="p-3">{u.email}</td>
                                     <td className="p-3 text-xs">{u.phone || "—"}</td>
                                     <td className="p-3 text-xs capitalize">
-                                        {(u.activeRole || "").replace(/_/g, " ")}
+                                        {(u.currentRole || u.activeRole || "").replace(/_/g, " ")}
                                     </td>
                                     <td className="p-3 text-xs">
                                         {(u.roles || u.hasRoles || [])

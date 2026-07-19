@@ -202,10 +202,14 @@ const MyBookings = () => {
                     const canCancel = ["awaiting_payment_proof", "pending", "confirmed"].includes(
                         booking.status
                     );
+                    const proofExpired =
+                        booking.paymentProofExpiresAt &&
+                        new Date(booking.paymentProofExpiresAt).getTime() <= Date.now();
                     const canUploadProof =
-                        booking.status === "awaiting_payment_proof" ||
-                        (booking.paymentMethod === "prepaid" &&
-                            booking.paymentStatus === "awaiting_proof");
+                        !proofExpired &&
+                        (booking.status === "awaiting_payment_proof" ||
+                            (booking.paymentMethod === "prepaid" &&
+                                booking.paymentStatus === "awaiting_proof"));
                     const canReview = booking.status === "completed";
 
                     return (
@@ -328,6 +332,20 @@ const MyBookings = () => {
                                         View uploaded payment proof
                                     </a>
                                 )}
+                                {canUploadProof && booking.paymentProofExpiresAt && (
+                                    <p className="mt-3 text-xs text-amber-700">
+                                        Upload payment proof by{" "}
+                                        {new Date(
+                                            booking.paymentProofExpiresAt
+                                        ).toLocaleString()}
+                                        .
+                                    </p>
+                                )}
+                                {proofExpired && booking.status === "awaiting_payment_proof" && (
+                                    <p className="mt-3 text-xs text-red-600">
+                                        The payment-proof upload window has expired.
+                                    </p>
+                                )}
 
                                 {/* Actions */}
                                 <div className="flex flex-wrap gap-2 mt-4">
@@ -389,6 +407,12 @@ const MyBookings = () => {
                             Upload a screenshot of your bank transfer. The super admin will review
                             and verify it.
                         </p>
+                        {proofTarget.paymentProofExpiresAt && (
+                            <p className="text-sm text-amber-700 mb-4">
+                                Upload by{" "}
+                                {new Date(proofTarget.paymentProofExpiresAt).toLocaleString()}.
+                            </p>
+                        )}
                         <input
                             type="file"
                             accept="image/*"

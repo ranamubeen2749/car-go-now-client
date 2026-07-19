@@ -50,7 +50,7 @@ import Verifications, {
     PendingIndependentDrivers,
     PendingLicenses,
     PendingBookingPayments,
-    BusinessDriversInfo,
+    PendingBusinessDrivers,
 } from "./pages/admin/Verifications";
 
 import { useAppContext } from "./context/AppContext";
@@ -142,7 +142,7 @@ const App = () => {
                         />
                         <Route path="renter-licenses" element={<PendingLicenses />} />
                         <Route path="booking-payments" element={<PendingBookingPayments />} />
-                        <Route path="business-drivers" element={<BusinessDriversInfo />} />
+                        <Route path="business-drivers" element={<PendingBusinessDrivers />} />
                     </Route>
                 </Route>
             </Routes>
