@@ -134,65 +134,88 @@ const DriverDetails = () => {
     if (!driver) return <div className="text-center py-20">Driver not found</div>;
 
     return (
-        <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
+        <main className="min-h-screen bg-light px-6 py-10 sm:px-8 lg:px-12 lg:py-14">
+            <div className="mx-auto max-w-7xl">
             <button
+                type="button"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 mb-6 text-gray-500 cursor-pointer"
+                className="ui-button ui-button-secondary mb-7"
             >
                 <img src={assets.arrow_icon} alt="" className="rotate-180 opacity-65" />
-                Back
+                Back to all drivers
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="lg:col-span-2"
+                    className="ui-card min-w-0 p-6 sm:p-8"
                 >
                     <div className="flex items-center gap-4">
                         {driver.avatar?.url ? (
                             <img
                                 src={driver.avatar.url}
                                 alt={driver.name}
-                                className="w-24 h-24 rounded-full object-cover"
+                                className="h-24 w-24 rounded-2xl object-cover shadow-sm"
                             />
                         ) : (
-                            <div className="w-24 h-24 rounded-full bg-primary/10 text-primary flex items-center justify-center text-3xl font-semibold">
+                            <div className="grid h-24 w-24 shrink-0 place-items-center rounded-2xl bg-primary text-3xl font-semibold text-white shadow-lg shadow-primary/20">
                                 {(driver.name || "D")[0]}
                             </div>
                         )}
                         <div>
-                            <h1 className="text-3xl font-bold">{driver.name}</h1>
-                            <p className="text-gray-500">{driver.city}</p>
+                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                                Independent driver
+                            </p>
+                            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+                                {driver.name}
+                            </h1>
+                            <p className="mt-2 flex items-center gap-2 text-muted">
+                                <img src={assets.location_icon} alt="" className="h-4 w-4" />
+                                {driver.city}
+                            </p>
                         </div>
                     </div>
 
-                    <hr className="border-borderColor my-6" />
+                    <hr className="my-7 border-borderColor" />
 
                     <div>
-                        <h2 className="text-xl font-medium mb-2">About</h2>
-                        <p className="text-gray-600">{driver.bio || "No bio provided."}</p>
+                        <h2 className="mb-3 text-xl font-semibold text-ink">About</h2>
+                        <p className="leading-7 text-muted">
+                            {driver.bio || "No bio provided."}
+                        </p>
                     </div>
 
-                    <div className="mt-8">
-                        <h2 className="text-xl font-medium mb-4">Reviews</h2>
+                    <div className="mt-8 border-t border-borderColor pt-7">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-xl font-semibold text-ink">Reviews</h2>
+                            <span className="text-sm text-muted">
+                                {reviews.length} {reviews.length === 1 ? "review" : "reviews"}
+                            </span>
+                        </div>
                         {reviews.length === 0 ? (
-                            <p className="text-gray-500 text-sm">No reviews yet.</p>
+                            <div className="rounded-2xl bg-slate-50 p-5 text-sm text-muted">
+                                No reviews yet.
+                            </div>
                         ) : (
                             reviews.map((r) => (
                                 <div
                                     key={r._id}
-                                    className="border-t border-borderColor py-3"
+                                    className="border-t border-borderColor py-4 first:border-t-0"
                                 >
                                     <div className="flex items-center justify-between text-sm">
-                                        <p className="font-medium">
+                                        <p className="font-semibold text-ink">
                                             {r.user?.name || "Anonymous"}
                                         </p>
-                                        <p className="text-amber-500">★ {r.rating}</p>
+                                        <p className="font-semibold text-amber-500">
+                                            ★ {r.rating}
+                                        </p>
                                     </div>
                                     {r.comment && (
-                                        <p className="text-gray-600 mt-1 text-sm">{r.comment}</p>
+                                        <p className="mt-2 text-sm leading-6 text-muted">
+                                            {r.comment}
+                                        </p>
                                     )}
                                 </div>
                             ))
@@ -205,50 +228,55 @@ const DriverDetails = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
                     onSubmit={handleSubmit}
-                    className="shadow-lg h-max sticky top-18 rounded-xl p-6 space-y-5 text-gray-500"
+                    className="ui-card h-max space-y-5 p-6 text-muted lg:sticky lg:top-24"
                 >
-                    <p className="flex items-center justify-between text-2xl text-gray-800 font-semibold">
-                        {currency}
-                        {driver.pricePerDay}
-                        <span className="text-base text-gray-400 font-normal">per day</span>
-                    </p>
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                            Hire this driver
+                        </p>
+                        <p className="mt-2 text-3xl font-semibold text-ink">
+                            {currency}
+                            {driver.pricePerDay}
+                            <span className="ml-2 text-sm font-normal text-muted">per day</span>
+                        </p>
+                    </div>
                     <hr className="border-borderColor my-4" />
 
                     <div className="flex flex-col gap-2">
-                        <label>Start Date</label>
+                        <label className="text-sm font-semibold text-slate-700">Start date</label>
                         <input
                             type="date"
                             value={startDate}
                             onChange={(e) => setStartDate(e.target.value)}
                             min={new Date().toISOString().split("T")[0]}
                             required
-                            className="border border-borderColor px-3 py-2 rounded-lg"
+                            className="ui-field"
                         />
                     </div>
                     <div className="flex flex-col gap-2">
-                        <label>End Date</label>
+                        <label className="text-sm font-semibold text-slate-700">End date</label>
                         <input
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
                             min={startDate || new Date().toISOString().split("T")[0]}
                             required
-                            className="border border-borderColor px-3 py-2 rounded-lg"
+                            className="ui-field"
                         />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-gray-700 text-sm font-medium">
-                            Payment Method
+                        <label className="text-sm font-semibold text-slate-700">
+                            Payment method
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 type="button"
                                 onClick={() => setPaymentMethod("cash")}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     paymentMethod === "cash"
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 Cash
@@ -256,10 +284,10 @@ const DriverDetails = () => {
                             <button
                                 type="button"
                                 onClick={() => setPaymentMethod("prepaid")}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     paymentMethod === "prepaid"
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 Prepaid
@@ -268,22 +296,22 @@ const DriverDetails = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label>Notes (optional)</label>
+                        <label className="text-sm font-semibold text-slate-700">Notes (optional)</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={2}
-                            className="border border-borderColor px-3 py-2 rounded-lg outline-none"
+                            className="ui-field min-h-20 resize-y"
                         />
                     </div>
 
                     {numDays > 0 && (
-                        <div className="flex justify-between text-sm pt-2">
+                        <div className="flex justify-between rounded-xl bg-slate-50 p-4 text-sm">
                             <span>
                                 {currency}
                                 {driver.pricePerDay} × {numDays} day(s)
                             </span>
-                            <span className="font-semibold text-gray-700">
+                            <span className="font-semibold text-ink">
                                 {currency}
                                 {totalPrice}
                             </span>
@@ -292,7 +320,7 @@ const DriverDetails = () => {
 
                     <button
                         disabled={submitting}
-                        className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer disabled:opacity-60"
+                        className="ui-button min-h-12 w-full text-base disabled:opacity-60"
                     >
                         {submitting ? "Submitting…" : "Hire Driver"}
                     </button>
@@ -373,7 +401,8 @@ const DriverDetails = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </main>
     );
 };
 

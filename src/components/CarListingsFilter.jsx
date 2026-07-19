@@ -1,6 +1,11 @@
-import React from "react";
-import { assets, locationPlaceholder } from "../assets/assets";
 import { motion } from "motion/react";
+import { assets, locationPlaceholder } from "../assets/assets";
+
+const fields = [
+    ["Location", "location"],
+    ["Min price", "min"],
+    ["Max price", "max"],
+];
 
 const CarListingsFilter = ({
     location,
@@ -20,125 +25,81 @@ const CarListingsFilter = ({
     variant = "default",
 }) => {
     const isHero = variant === "hero";
-
-    const filterForm = (
-        <form
-            onSubmit={handleApplyFilters}
-            className={
-                isHero
-                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 w-full max-w-5xl mx-auto px-4 items-end"
-                    : "grid grid-cols-2 md:grid-cols-6 gap-3 max-w-7xl mx-auto xl:px-20 mb-6 items-end"
-            }
-        >
-            <div className="flex flex-col text-sm text-left">
-                <label className="text-gray-500">Location</label>
-                <input
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder={locationPlaceholder}
-                    className="border border-borderColor rounded-md px-2 py-1.5 outline-none bg-white"
-                />
-            </div>
-            <div className="flex flex-col text-sm text-left">
-                <label className="text-gray-500">Min Price</label>
-                <input
-                    type="number"
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="border border-borderColor rounded-md px-2 py-1.5 outline-none bg-white"
-                />
-            </div>
-            <div className="flex flex-col text-sm text-left">
-                <label className="text-gray-500">Max Price</label>
-                <input
-                    type="number"
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="border border-borderColor rounded-md px-2 py-1.5 outline-none bg-white"
-                />
-            </div>
-            <div className="flex flex-col text-sm text-left">
-                <label className="text-gray-500">Sort By</label>
-                <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    className="border border-borderColor rounded-md px-2 py-1.5 outline-none bg-white"
-                >
-                    <option value="createdAt">Newest</option>
-                    <option value="pricePerDay">Price</option>
-                    <option value="year">Year</option>
-                </select>
-            </div>
-            <div className="flex flex-col text-sm text-left">
-                <label className="text-gray-500">Order</label>
-                <select
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(e.target.value)}
-                    className="border border-borderColor rounded-md px-2 py-1.5 outline-none bg-white"
-                >
-                    <option value="desc">Desc</option>
-                    <option value="asc">Asc</option>
-                </select>
-            </div>
-            <button
-                type="submit"
-                className="bg-primary text-white rounded-md px-4 py-2 text-sm h-fit cursor-pointer"
-            >
-                Apply
-            </button>
-        </form>
-    );
-
-    const searchBar = (
-        <div className="flex items-center bg-white px-4 w-full max-w-140 h-12 rounded-full shadow">
-            <img src={assets.search_icon} alt="" className="w-4.5 h-4.5 mr-2" />
-            <input
-                onChange={(e) => setInput(e.target.value)}
-                value={input}
-                type="text"
-                placeholder="Search by make, model, transmission..."
-                className="w-full h-full outline-none text-gray-500"
-                disabled={!query}
-            />
-            <img src={assets.filter_icon} alt="" className="w-4.5 h-4.5 ml-2" />
-        </div>
-    );
-
-    if (isHero) {
-        return (
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 50 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="flex flex-col items-center gap-4 w-full"
-            >
-                {filterForm}
-                {searchBar}
-            </motion.div>
-        );
-    }
+    const values = { location, min: minPrice, max: maxPrice };
+    const setters = { location: setLocation, min: setMinPrice, max: setMaxPrice };
 
     return (
-        <>
-            {filterForm}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="flex items-center bg-white px-4 mt-6 max-w-140 w-full h-12 rounded-full shadow mx-auto"
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: isHero ? 0.25 : 0 }}
+            className={`mx-auto w-full max-w-7xl ${
+                isHero
+                    ? "rounded-2xl border border-white/15 bg-white/95 p-4 text-ink shadow-2xl shadow-slate-950/25 backdrop-blur sm:p-5"
+                    : "ui-card p-4 sm:p-5"
+            }`}
+        >
+            <form
+                onSubmit={handleApplyFilters}
+                className="grid grid-cols-2 items-end gap-3 md:grid-cols-3 lg:grid-cols-6"
             >
-                <img src={assets.search_icon} alt="" className="w-4.5 h-4.5 mr-2" />
+                {fields.map(([label, key]) => (
+                    <label key={key} className="text-left text-xs font-semibold text-slate-600">
+                        {label}
+                        <input
+                            type={key === "location" ? "text" : "number"}
+                            min={key === "location" ? undefined : "0"}
+                            value={values[key]}
+                            onChange={(event) => setters[key](event.target.value)}
+                            placeholder={key === "location" ? locationPlaceholder : "Any"}
+                            className="ui-field mt-1.5"
+                        />
+                    </label>
+                ))}
+
+                <label className="text-left text-xs font-semibold text-slate-600">
+                    Sort by
+                    <select
+                        value={sortBy}
+                        onChange={(event) => setSortBy(event.target.value)}
+                        className="ui-field mt-1.5"
+                    >
+                        <option value="createdAt">Newest</option>
+                        <option value="pricePerDay">Price</option>
+                        <option value="year">Year</option>
+                    </select>
+                </label>
+
+                <label className="text-left text-xs font-semibold text-slate-600">
+                    Order
+                    <select
+                        value={sortOrder}
+                        onChange={(event) => setSortOrder(event.target.value)}
+                        className="ui-field mt-1.5"
+                    >
+                        <option value="desc">High to low</option>
+                        <option value="asc">Low to high</option>
+                    </select>
+                </label>
+
+                <button type="submit" className="ui-button h-11 w-full">
+                    Apply filters
+                </button>
+            </form>
+
+            <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-borderColor bg-slate-50 px-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/10">
+                <img src={assets.search_icon} alt="" className="h-4 w-4 opacity-60" />
+                <span className="sr-only">Search visible cars</span>
                 <input
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(event) => setInput(event.target.value)}
                     value={input}
-                    type="text"
-                    placeholder="Search by make, model, transmission..."
-                    className="w-full h-full outline-none text-gray-500"
+                    type="search"
+                    placeholder="Search make, model, category, or transmission"
+                    className="h-full min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-slate-400"
                     disabled={!query}
                 />
-                <img src={assets.filter_icon} alt="" className="w-4.5 h-4.5 ml-2" />
-            </motion.div>
-        </>
+            </label>
+        </motion.div>
     );
 };
 

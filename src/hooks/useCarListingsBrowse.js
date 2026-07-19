@@ -17,7 +17,14 @@ export const useCarListingsBrowse = ({ limit = 12, syncSearchParams = false } = 
     const [sortBy, setSortBy] = useState("createdAt");
     const [sortOrder, setSortOrder] = useState("desc");
 
-    const [query, setQuery] = useState(null);
+    const [query, setQuery] = useState({
+        location: pickupLocation,
+        minPrice: "",
+        maxPrice: "",
+        sortBy: "createdAt",
+        sortOrder: "desc",
+        page: 1,
+    });
     const [input, setInput] = useState("");
 
     const [totalPages, setTotalPages] = useState(1);

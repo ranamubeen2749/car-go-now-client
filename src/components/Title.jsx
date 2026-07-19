@@ -1,12 +1,27 @@
-import React from 'react'
+const Title = ({ title, subTitle, eyebrow, align }) => {
+    const left = align === "left";
 
-const Title = ({ title, subTitle, align }) => {
-  return (
-    <div className={`flex flex-col justify-center items-center text-center ${align === "left" && " md:items-start md:text-left"}`}>
-      <h1 className='font-semibold text-4xl md:text-[40px]'>{title}</h1>
-      <p className='text-sm md:text-base text-gray-500/90 mt-2 max-w-156'>{subTitle}</p>
-    </div>
-  )
-}
+    return (
+        <div
+            className={`flex flex-col ${
+                left
+                    ? "items-start text-left"
+                    : "items-center text-center"
+            }`}
+        >
+            {eyebrow && (
+                <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                    {eyebrow}
+                </p>
+            )}
+            <h1 className="text-3xl font-semibold tracking-tight text-ink md:text-[40px] md:leading-tight">
+                {title}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted md:text-base">
+                {subTitle}
+            </p>
+        </div>
+    );
+};
 
-export default Title
+export default Title;

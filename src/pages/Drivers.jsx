@@ -47,115 +47,136 @@ const Drivers = () => {
     }, [fetchDrivers]);
 
     return (
-        <div>
+        <main className="min-h-screen bg-light">
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="flex flex-col items-center py-20 bg-light max-md:px-4"
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="border-b border-borderColor bg-white px-6 py-14 sm:px-8 lg:px-12 lg:py-16"
             >
-                <Title
-                    title="Independent Drivers"
-                    subTitle="Hire a professional driver for your own vehicle"
-                />
+                <div className="mx-auto w-full max-w-7xl">
+                    <Title
+                        eyebrow="Driver marketplace"
+                        title="Independent Drivers"
+                        subTitle="Hire a verified professional driver for your own vehicle."
+                        align="left"
+                    />
+                </div>
             </motion.div>
 
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-10">
+            <section className="mx-auto max-w-7xl px-6 py-10 sm:px-8 lg:px-12 lg:py-12">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
                         setPage(1);
                         fetchDrivers();
                     }}
-                    className="grid grid-cols-2 md:grid-cols-6 gap-3 max-w-7xl mx-auto xl:px-20 mb-6 items-end"
+                    className="ui-card grid grid-cols-2 items-end gap-3 p-4 md:grid-cols-3 lg:grid-cols-6 sm:p-5"
                 >
-                    <div className="flex flex-col text-sm">
-                        <label className="text-gray-500">City</label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        City
                         <input
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
                             placeholder={locationPlaceholder}
-                            className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
+                            className="ui-field mt-1.5"
                         />
-                    </div>
-                    <div className="flex flex-col text-sm">
-                        <label className="text-gray-500">Min Price</label>
+                    </label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        Min price
                         <input
                             type="number"
+                            min="0"
                             value={minPrice}
                             onChange={(e) => setMinPrice(e.target.value)}
-                            className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
+                            placeholder="Any"
+                            className="ui-field mt-1.5"
                         />
-                    </div>
-                    <div className="flex flex-col text-sm">
-                        <label className="text-gray-500">Max Price</label>
+                    </label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        Max price
                         <input
                             type="number"
+                            min="0"
                             value={maxPrice}
                             onChange={(e) => setMaxPrice(e.target.value)}
-                            className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
+                            placeholder="Any"
+                            className="ui-field mt-1.5"
                         />
-                    </div>
-                    <div className="flex flex-col text-sm">
-                        <label className="text-gray-500">Sort By</label>
+                    </label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        Sort by
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
+                            className="ui-field mt-1.5"
                         >
                             <option value="createdAt">Newest</option>
                             <option value="pricePerDay">Price</option>
                         </select>
-                    </div>
-                    <div className="flex flex-col text-sm">
-                        <label className="text-gray-500">Order</label>
+                    </label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        Order
                         <select
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
-                            className="border border-borderColor rounded-md px-2 py-1.5 outline-none"
+                            className="ui-field mt-1.5"
                         >
-                            <option value="desc">Desc</option>
-                            <option value="asc">Asc</option>
+                            <option value="desc">High to low</option>
+                            <option value="asc">Low to high</option>
                         </select>
-                    </div>
-                    <button className="bg-primary text-white rounded-md px-4 py-2 text-sm h-fit cursor-pointer">
-                        Apply
+                    </label>
+                    <button type="submit" className="ui-button h-11 w-full">
+                        Apply filters
                     </button>
                 </form>
 
-                <p className="text-gray-500 xl:px-20 max-w-7xl mx-auto">
-                    Showing {drivers.length} of {total} drivers{loading && " (loading…)"}
+                <p className="mt-8 text-sm text-muted" aria-live="polite">
+                    {loading
+                        ? "Updating results…"
+                        : `${total} ${total === 1 ? "driver" : "drivers"} available`}
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 xl:px-20 max-w-7xl mx-auto">
+                <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {drivers.map((d) => (
                         <DriverCard key={d._id} driver={d} />
                     ))}
                 </div>
 
+                {!loading && drivers.length === 0 && (
+                    <div className="ui-card mt-5 px-6 py-14 text-center">
+                        <p className="text-lg font-semibold text-ink">No drivers found</p>
+                        <p className="mt-2 text-sm text-muted">
+                            Try a different city or price range.
+                        </p>
+                    </div>
+                )}
+
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-2 mt-10 mb-16">
+                    <div className="mt-10 flex items-center justify-center gap-3">
                         <button
+                            type="button"
                             onClick={() => setPage((p) => Math.max(1, p - 1))}
                             disabled={page === 1}
-                            className="px-3 py-1.5 border border-borderColor rounded-md text-sm disabled:opacity-40"
+                            className="ui-button ui-button-secondary"
                         >
-                            Prev
+                            Previous
                         </button>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-muted">
                             Page {page} of {totalPages}
                         </span>
                         <button
+                            type="button"
                             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                             disabled={page === totalPages}
-                            className="px-3 py-1.5 border border-borderColor rounded-md text-sm disabled:opacity-40"
+                            className="ui-button ui-button-secondary"
                         >
                             Next
                         </button>
                     </div>
                 )}
-            </div>
-        </div>
+            </section>
+        </main>
     );
 };
 

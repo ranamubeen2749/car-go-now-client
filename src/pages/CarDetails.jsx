@@ -160,22 +160,24 @@ const CarDetails = () => {
     const mainImage = carImages[activeImage]?.url || car?.images?.[0]?.url || null;
 
     return (
-        <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
+        <main className="min-h-screen bg-light px-6 py-10 sm:px-8 lg:px-12 lg:py-14">
+            <div className="mx-auto max-w-7xl">
             <button
+                type="button"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 mb-6 text-gray-500 cursor-pointer"
+                className="ui-button ui-button-secondary mb-7"
             >
                 <img src={assets.arrow_icon} alt="" className="rotate-180 opacity-65" />
                 Back to all cars
             </button>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
                 {/* Left: Car Image & Details */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="lg:col-span-2"
+                    className="min-w-0"
                 >
                     {mainImage ? (
                         <motion.img
@@ -184,24 +186,24 @@ const CarDetails = () => {
                             transition={{ duration: 0.5 }}
                             src={mainImage}
                             alt={`${car.brand} ${car.model}`}
-                            className="w-full h-auto md:max-h-100 object-cover rounded-xl mb-6 shadow-md"
+                            className="aspect-[16/10] w-full rounded-3xl border border-borderColor object-cover shadow-xl shadow-slate-950/8"
                         />
                     ) : (
-                        <div className="w-full h-72 bg-gray-100 rounded-xl mb-6 flex items-center justify-center text-gray-400">
+                        <div className="grid aspect-[16/10] w-full place-items-center rounded-3xl border border-borderColor bg-white text-muted">
                             No image
                         </div>
                     )}
 
                     {/* Thumbnails */}
                     {carImages.length > 1 && (
-                        <div className="flex gap-2 mb-6 overflow-x-auto">
+                        <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
                             {carImages.map((img, idx) => (
                                 <img
                                     key={img._id || idx}
                                     src={img.thumbnailUrl || img.url}
                                     alt=""
                                     onClick={() => setActiveImage(idx)}
-                                    className={`h-20 w-28 object-cover rounded-md cursor-pointer border-2 ${
+                                    className={`h-20 w-28 shrink-0 cursor-pointer rounded-xl border-2 object-cover ${
                                         idx === activeImage ? "border-primary" : "border-transparent"
                                     }`}
                                 />
@@ -209,26 +211,26 @@ const CarDetails = () => {
                         </div>
                     )}
 
-                    <div className="space-y-6">
+                    <div className="ui-card mt-6 space-y-7 p-6 sm:p-8">
                         <div>
-                            <h1 className="text-3xl font-bold">
+                            <h1 className="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
                                 {car.brand} {car.model}
                             </h1>
-                            <p className="text-gray-500 text-lg">
+                            <p className="mt-2 text-base text-muted">
                                 {car.category} • {car.year}
                             </p>
                             {car.business?.name && (
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="mt-2 text-sm text-muted">
                                     Listed by{" "}
-                                    <span className="font-medium">{car.business.name}</span>
+                                    <span className="font-semibold text-ink">{car.business.name}</span>
                                     {car.business.city && <> · {car.business.city}</>}
                                 </p>
                             )}
                         </div>
 
-                        <hr className="border-borderColor my-6" />
+                        <hr className="border-borderColor" />
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                             {[
                                 {
                                     icon: assets.users_icon,
@@ -240,17 +242,17 @@ const CarDetails = () => {
                             ].map(({ icon, text }) => (
                                 <div
                                     key={text}
-                                    className="flex flex-col items-center bg-light p-4 rounded-lg"
+                                    className="flex min-w-0 flex-col items-center rounded-2xl border border-borderColor bg-slate-50 p-4 text-center text-sm font-medium text-slate-700"
                                 >
-                                    <img src={icon} alt="" className="h-5 mb-2" />
+                                    <img src={icon} alt="" className="mb-2 h-5 opacity-70" />
                                     {text}
                                 </div>
                             ))}
                         </div>
 
                         <div>
-                            <h1 className="text-xl font-medium mb-3">Description</h1>
-                            <p className="text-gray-500">{car.description}</p>
+                            <h2 className="mb-3 text-xl font-semibold text-ink">Description</h2>
+                            <p className="leading-7 text-muted">{car.description}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -261,27 +263,32 @@ const CarDetails = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3, duration: 0.6 }}
                     onSubmit={handleSubmit}
-                    className="shadow-lg h-max sticky top-18 rounded-xl p-6 space-y-5 text-gray-500"
+                    className="ui-card h-max space-y-5 p-6 text-muted lg:sticky lg:top-24"
                 >
-                    <p className="flex items-center justify-between text-2xl text-gray-800 font-semibold">
-                        {currency}
-                        {car.pricePerDay}
-                        <span className="text-base text-gray-400 font-normal">per day</span>
-                    </p>
+                    <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                            Reserve this car
+                        </p>
+                        <p className="mt-2 text-3xl font-semibold text-ink">
+                            {currency}
+                            {car.pricePerDay}
+                            <span className="ml-2 text-sm font-normal text-muted">per day</span>
+                        </p>
+                    </div>
 
                     <hr className="border-borderColor my-4" />
 
                     {/* Driver option */}
                     <div className="flex flex-col gap-2">
-                        <label className="text-gray-700 text-sm font-medium">Driver</label>
+                        <label className="text-sm font-semibold text-slate-700">Trip type</label>
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 type="button"
                                 onClick={() => setWithDriver(true)}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     withDriver
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 With driver
@@ -289,10 +296,10 @@ const CarDetails = () => {
                             <button
                                 type="button"
                                 onClick={() => setWithDriver(false)}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     !withDriver
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 Self-drive
@@ -312,12 +319,12 @@ const CarDetails = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label htmlFor="pickup-date">Pickup Date</label>
+                        <label htmlFor="pickup-date" className="text-sm font-semibold text-slate-700">Pickup date</label>
                         <input
                             value={pickupDate}
                             onChange={(e) => setPickupDate(e.target.value)}
                             type="date"
-                            className="border border-borderColor px-3 py-2 rounded-lg"
+                            className="ui-field"
                             required
                             id="pickup-date"
                             min={new Date().toISOString().split("T")[0]}
@@ -325,12 +332,12 @@ const CarDetails = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label htmlFor="return-date">Return Date</label>
+                        <label htmlFor="return-date" className="text-sm font-semibold text-slate-700">Return date</label>
                         <input
                             value={returnDate}
                             onChange={(e) => setReturnDate(e.target.value)}
                             type="date"
-                            className="border border-borderColor px-3 py-2 rounded-lg"
+                            className="ui-field"
                             required
                             id="return-date"
                             min={pickupDate || new Date().toISOString().split("T")[0]}
@@ -338,29 +345,29 @@ const CarDetails = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label>Pickup Time</label>
+                        <label className="text-sm font-semibold text-slate-700">Pickup time</label>
                         <input
                             type="text"
                             value={pickupTime}
                             onChange={(e) => setPickupTime(e.target.value)}
                             placeholder="e.g. 09:00 AM"
-                            className="border border-borderColor px-3 py-2 rounded-lg"
+                            className="ui-field"
                             required
                         />
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label className="text-gray-700 text-sm font-medium">
-                            Payment Method
+                        <label className="text-sm font-semibold text-slate-700">
+                            Payment method
                         </label>
                         <div className="grid grid-cols-2 gap-2">
                             <button
                                 type="button"
                                 onClick={() => setPaymentMethod("cash")}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     paymentMethod === "cash"
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 Cash on pickup
@@ -368,10 +375,10 @@ const CarDetails = () => {
                             <button
                                 type="button"
                                 onClick={() => setPaymentMethod("prepaid")}
-                                className={`px-3 py-2 rounded-md border text-sm ${
+                                className={`min-h-11 rounded-xl border px-3 text-sm font-semibold ${
                                     paymentMethod === "prepaid"
                                         ? "border-primary bg-primary/10 text-primary"
-                                        : "border-borderColor"
+                                        : "border-borderColor bg-white text-slate-600"
                                 }`}
                             >
                                 Prepaid (bank transfer)
@@ -386,22 +393,22 @@ const CarDetails = () => {
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <label>Notes (optional)</label>
+                        <label className="text-sm font-semibold text-slate-700">Notes (optional)</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={2}
-                            className="border border-borderColor px-3 py-2 rounded-lg outline-none"
+                            className="ui-field min-h-20 resize-y"
                         />
                     </div>
 
                     {numDays > 0 && (
-                        <div className="flex justify-between text-sm pt-2">
+                        <div className="flex justify-between rounded-xl bg-slate-50 p-4 text-sm">
                             <span>
                                 {currency}
                                 {car.pricePerDay} × {numDays} day(s)
                             </span>
-                            <span className="font-semibold text-gray-700">
+                            <span className="font-semibold text-ink">
                                 {currency}
                                 {totalPrice}
                             </span>
@@ -410,7 +417,7 @@ const CarDetails = () => {
 
                     <button
                         disabled={submitting}
-                        className="w-full bg-primary hover:bg-primary-dull transition-all py-3 font-medium text-white rounded-xl cursor-pointer disabled:opacity-60"
+                        className="ui-button min-h-12 w-full text-base disabled:opacity-60"
                     >
                         {submitting ? "Submitting…" : "Book Now"}
                     </button>
@@ -497,7 +504,8 @@ const CarDetails = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </main>
     );
 };
 

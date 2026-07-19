@@ -17,27 +17,34 @@ const CarListingsBrowse = ({
     const browse = useCarListingsBrowse({ limit, syncSearchParams });
 
     return (
-        <div id={id}>
+        <main id={id} className="min-h-screen bg-light">
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="flex flex-col items-center py-20 bg-light max-md:px-4"
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="border-b border-borderColor bg-white px-6 py-14 sm:px-8 lg:px-12 lg:py-16"
             >
-                <Title title={title} subTitle={subTitle} />
-                <div className="w-full mt-6 px-4">
+                <div className="mx-auto w-full max-w-7xl">
+                    <Title
+                        eyebrow="Car marketplace"
+                        title={title}
+                        subTitle={subTitle}
+                        align="left"
+                    />
+                </div>
+                <div className="mt-8 w-full">
                     <CarListingsFilter {...browse} />
                 </div>
             </motion.div>
 
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-10">
+            <section className="mx-auto max-w-7xl px-6 py-12 sm:px-8 lg:px-12 lg:py-16">
                 <CarListingsResults
                     {...browse}
                     showExploreAll={showExploreAll}
                     exploreAllPath={exploreAllPath}
                 />
-            </div>
-        </div>
+            </section>
+        </main>
     );
 };
 

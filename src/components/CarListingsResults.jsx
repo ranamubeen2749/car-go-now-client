@@ -1,8 +1,6 @@
-import React from "react";
-import CarCard from "./CarCard";
-import { assets } from "../assets/assets";
-import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
+import CarCard from "./CarCard";
 
 const CarListingsResults = ({
     query,
@@ -17,59 +15,67 @@ const CarListingsResults = ({
 }) => {
     const navigate = useNavigate();
 
-    if (!query) {
-        return (
-            <p
-                className={`text-gray-500 max-w-7xl mx-auto text-center ${
-                    compact ? "py-8" : "py-12 xl:px-20"
-                }`}
-            >
-                Set your filters and click <strong>Apply</strong> to see available cars.
-            </p>
-        );
-    }
+    if (!query) return null;
 
     return (
         <>
-            <p className={`text-gray-500 max-w-7xl mx-auto ${compact ? "" : "xl:px-20"}`}>
-                Showing {displayedCars.length} of {total} cars
-                {loading && " (loading…)"}
-            </p>
-
-            <div
-                className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4 max-w-7xl mx-auto ${
-                    compact ? "" : "xl:px-20"
-                }`}
-            >
-                {displayedCars.map((car, index) => (
-                    <motion.div
-                        key={car._id || index}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.05 * index, duration: 0.4 }}
-                    >
-                        <CarCard car={car} />
-                    </motion.div>
-                ))}
+            <div className="flex items-center justify-between gap-4">
+                <p className="text-sm text-muted" aria-live="polite">
+                    {loading
+                        ? "Updating results…"
+                        : `${total} ${total === 1 ? "car" : "cars"} available`}
+                </p>
             </div>
 
+            {loading && displayedCars.length === 0 ? (
+                <div className="ui-card mt-5 grid min-h-56 place-items-center text-sm text-muted">
+                    Finding available cars…
+                </div>
+            ) : displayedCars.length === 0 ? (
+                <div className="ui-card mt-5 px-6 py-14 text-center">
+                    <p className="text-lg font-semibold text-ink">No cars found</p>
+                    <p className="mt-2 text-sm text-muted">
+                        Try a different location, price range, or search term.
+                    </p>
+                </div>
+            ) : (
+                <div
+                    className={`mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 ${
+                        compact ? "" : "xl:gap-7"
+                    }`}
+                >
+                    {displayedCars.map((car, index) => (
+                        <motion.div
+                            key={car._id || index}
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: Math.min(index * 0.04, 0.2), duration: 0.35 }}
+                        >
+                            <CarCard car={car} />
+                        </motion.div>
+                    ))}
+                </div>
+            )}
+
             {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-10 mb-8">
+                <div className="mt-10 flex items-center justify-center gap-3">
                     <button
+                        type="button"
                         onClick={() => goToPage(Math.max(1, query.page - 1))}
                         disabled={query.page === 1 || loading}
-                        className="px-3 py-1.5 border border-borderColor rounded-md text-sm disabled:opacity-40"
+                        className="ui-button ui-button-secondary"
                     >
-                        Prev
+                        Previous
                     </button>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted">
                         Page {query.page} of {totalPages}
                     </span>
                     <button
+                        type="button"
                         onClick={() => goToPage(Math.min(totalPages, query.page + 1))}
                         disabled={query.page === totalPages || loading}
-                        className="px-3 py-1.5 border border-borderColor rounded-md text-sm disabled:opacity-40"
+                        className="ui-button ui-button-secondary"
                     >
                         Next
                     </button>
@@ -77,18 +83,16 @@ const CarListingsResults = ({
             )}
 
             {showExploreAll && (
-                <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4, duration: 0.4 }}
+                <button
+                    type="button"
                     onClick={() => {
                         navigate(exploreAllPath);
                         scrollTo(0, 0);
                     }}
-                    className="flex items-center justify-center gap-2 px-6 py-2 border border-borderColor hover:bg-gray-50 rounded-md mt-12 mx-auto cursor-pointer"
+                    className="ui-button ui-button-secondary mx-auto mt-10 flex"
                 >
-                    Explore all cars <img src={assets.arrow_icon} alt="arrow" />
-                </motion.button>
+                    Explore all cars <span aria-hidden="true">→</span>
+                </button>
             )}
         </>
     );

@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const CDP_URL = process.env.E2E_CDP_URL || "http://127.0.0.1:9222";
+const APP_URL = process.env.E2E_APP_URL || "http://127.0.0.1:5173";
 const API_URL = process.env.E2E_API_URL || "http://localhost:3002";
 const ADMIN_EMAIL = process.env.E2E_ADMIN_EMAIL || "ranamubeen2749@gmail.com";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "test@123";
@@ -221,6 +222,18 @@ const readApi = (path, token) =>
         return { status: response.status, data: await response.json() };
     })()`);
 
+const findAdminPage = async (path, collection, predicate, token) => {
+    let page = 1;
+    while (true) {
+        const response = await readApi(`${path}?page=${page}&limit=20`, token);
+        if (response.data[collection]?.some(predicate)) return page;
+        if (page >= (response.data.pagination?.totalPages || 1)) {
+            throw new Error(`Missing admin record in ${path}`);
+        }
+        page += 1;
+    }
+};
+
 const setTestBookingState = (action, type, bookingId) =>
     JSON.parse(
         execFileSync(
@@ -307,7 +320,7 @@ await send("DOM.enable");
 
 try {
     await evaluate(`localStorage.clear()`);
-    await send("Page.reload", { ignoreCache: true });
+    await send("Page.navigate", { url: APP_URL });
     await waitFor(`document.readyState === "complete"`);
     await waitFor(`document.body.innerText.includes(${JSON.stringify(HOME_TEXT)})`);
     check("Frontend and backend are live", (await readApi("/api/car/listings")).data.success);
@@ -732,7 +745,8 @@ try {
     check("Owner completed booking lifecycle through UI", true);
     setTestBookingState("backdate", "car", prepaidBooking._id);
 
-    await evaluate(`document.querySelector('button[title="Notifications"]').click()`);
+    await evaluate(`[...document.querySelectorAll('button[title="Notifications"]')]
+        .find((button) => button.offsetParent !== null).click()`);
     await waitFor(`document.body.innerText.includes("Notifications")`);
     await waitFor(
         `document.querySelectorAll('button[title="Delete"]').length > 0`
@@ -800,7 +814,8 @@ try {
     });
     check("Verified customer self-drive booking and cancellation through UI", true);
 
-    await evaluate(`document.querySelector('button[title="Notifications"]').click()`);
+    await evaluate(`[...document.querySelectorAll('button[title="Notifications"]')]
+        .find((button) => button.offsetParent !== null).click()`);
     await waitFor(`document.body.innerText.includes("Notifications")`);
     await waitFor(
         `document.querySelectorAll('button[title="Delete"]').length > 0`
@@ -1054,7 +1069,8 @@ try {
         "driver",
         independentDriverBooking._id
     );
-    await evaluate(`document.querySelector('button[title="Notifications"]').click()`);
+    await evaluate(`[...document.querySelectorAll('button[title="Notifications"]')]
+        .find((button) => button.offsetParent !== null).click()`);
     await waitFor(`document.body.innerText.includes("Notifications")`);
     await waitFor(`document.querySelectorAll('button[title="Delete"]').length > 0`);
     check("Independent-driver notifications render", true);
@@ -1240,7 +1256,13 @@ try {
     });
     check("Admin verified business and driver platform fees through UI", true);
 
-    await navigate("/admin/businesses", owner.business);
+    const businessPage = await findAdminPage(
+        "/api/admin/businesses",
+        "businesses",
+        (item) => item.name === owner.business,
+        adminToken
+    );
+    await navigate(`/admin/businesses?page=${businessPage}`, owner.business);
     await clickRowAction(owner.business, "Block");
     await setValues(".fixed textarea", ["E2E business block check"]);
     await clickText("Block", "button", ".fixed");
@@ -1267,7 +1289,13 @@ try {
     });
     check("Admin blocked and unblocked a business through UI", true);
 
-    await navigate("/admin/drivers", independentDriver.name);
+    const driverPage = await findAdminPage(
+        "/api/admin/drivers",
+        "drivers",
+        (item) => item._id === independentDriverProfile._id,
+        adminToken
+    );
+    await navigate(`/admin/drivers?page=${driverPage}`, independentDriver.name);
     await clickRowAction(independentDriver.name, "Block");
     await setValues(".fixed textarea", ["E2E driver block check"]);
     await clickText("Block", "button", ".fixed");
@@ -1298,7 +1326,13 @@ try {
     });
     check("Admin blocked and unblocked an independent driver through UI", true);
 
-    await navigate("/admin/cars", car.model);
+    const carPage = await findAdminPage(
+        "/api/admin/cars",
+        "cars",
+        (item) => item._id === createdCar._id,
+        adminToken
+    );
+    await navigate(`/admin/cars?page=${carPage}`, car.model);
     await clickRowAction(car.model, "Reject");
     await setValues(".fixed textarea", ["E2E car rejection check"]);
     await clickText("Reject", "button", ".fixed");
