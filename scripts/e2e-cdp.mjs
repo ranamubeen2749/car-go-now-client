@@ -1,3 +1,6 @@
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
 const CDP_URL = process.env.E2E_CDP_URL || "http://127.0.0.1:9222";
 const APP_URL = process.env.E2E_APP_URL || "http://127.0.0.1:5173";
 const API_URL = process.env.E2E_API_URL || "http://localhost:3002";
@@ -8,6 +11,7 @@ const TEST_IMAGE =
     process.env.E2E_TEST_IMAGE ||
     "/home/walid-baharwal/Downloads/CarRental/CarRental-fullstack/client/src/assets/user_profile.png";
 const HOME_TEXT = "Luxury cars on Rent";
+const SERVER_DIR = fileURLToPath(new URL("../../server", import.meta.url));
 
 const runId = Date.now().toString(36);
 const password = "Test@1234";
@@ -221,6 +225,21 @@ const readApi = (path, token) =>
         });
         return { status: response.status, data: await response.json() };
     })()`);
+
+const setTestBookingState = (action, type, bookingId) =>
+    JSON.parse(
+        execFileSync(
+            process.execPath,
+            [
+                "--env-file=.env",
+                "scripts/e2e-state.mjs",
+                action,
+                type,
+                bookingId,
+            ],
+            { cwd: SERVER_DIR, encoding: "utf8" }
+        )
+    );
 
 const token = () => evaluate(`localStorage.getItem("token")`);
 
@@ -508,6 +527,61 @@ try {
         "Concurrent car requests create exactly one booking",
         carCollisionResults.filter((result) => result.success).length === 1
     );
+
+    const expiryStart = new Date(carCollisionEnd);
+    expiryStart.setUTCDate(expiryStart.getUTCDate() + 20);
+    const expiryEnd = new Date(expiryStart);
+    expiryEnd.setUTCDate(expiryEnd.getUTCDate() + 1);
+    await clickText("With driver");
+    await clickText("Prepaid (bank transfer)");
+    await setValues("#pickup-date, #return-date", [
+        date(expiryStart),
+        date(expiryEnd),
+    ]);
+    await setValues('input[placeholder="e.g. 09:00 AM"]', ["11:00 AM"]);
+    await setValues("form textarea", ["Expiring prepaid reservation"]);
+    await clickText("Book Now");
+    await waitFor(`document.body.innerText.includes("Complete your payment")`);
+    await clickText("I'll upload later", "button", ".fixed");
+    await waitFor(`location.pathname === "/my-bookings"`);
+    const expiringBooking = await waitUntil(async () => {
+        const bookings = await readApi(
+            "/api/bookings/car/my-bookings",
+            customerToken
+        );
+        return bookings.data.bookings?.find(
+            (item) => item.description === "Expiring prepaid reservation"
+        );
+    });
+    setTestBookingState("expire", "car", expiringBooking._id);
+
+    await navigate(`/car-details/${createdCar._id}`, car.model);
+    await clickText("With driver");
+    await clickText("Cash on pickup");
+    await setValues("#pickup-date, #return-date", [
+        date(expiryStart),
+        date(expiryEnd),
+    ]);
+    await setValues('input[placeholder="e.g. 09:00 AM"]', ["11:00 AM"]);
+    await setValues("form textarea", ["Replacement after payment expiry"]);
+    await clickText("Book Now");
+    await waitFor(`location.pathname === "/my-bookings"`);
+    await waitUntil(async () => {
+        const bookings = await readApi(
+            "/api/bookings/car/my-bookings",
+            customerToken
+        );
+        const expired = bookings.data.bookings?.find(
+            (item) => item._id === expiringBooking._id
+        );
+        const replacement = bookings.data.bookings?.find(
+            (item) => item.description === "Replacement after payment expiry"
+        );
+        return expired?.status === "cancelled" && replacement?.status === "pending";
+    });
+    check("Expired unpaid reservation releases its dates", true);
+
+    await navigate(`/car-details/${createdCar._id}`, car.model);
     await clickText("With driver");
     await clickText("Prepaid (bank transfer)");
     await setValues("#pickup-date, #return-date", [date(pickup), date(returned)]);
@@ -616,6 +690,7 @@ try {
         );
     });
     check("Owner completed booking lifecycle through UI", true);
+    setTestBookingState("backdate", "car", prepaidBooking._id);
 
     await evaluate(`document.querySelector('button[title="Notifications"]').click()`);
     await waitFor(`document.body.innerText.includes("Notifications")`);
@@ -934,6 +1009,11 @@ try {
         "Independent-driver dashboard recognizes completed revenue",
         driverDashboard.revenue.total === independentDriverBooking.price
     );
+    setTestBookingState(
+        "backdate",
+        "driver",
+        independentDriverBooking._id
+    );
     await evaluate(`document.querySelector('button[title="Notifications"]').click()`);
     await waitFor(`document.body.innerText.includes("Notifications")`);
     await waitFor(`document.querySelectorAll('button[title="Delete"]').length > 0`);
@@ -1022,14 +1102,187 @@ try {
         "Concurrent fee generation creates no duplicate entity-period records",
         feeKeys.length === new Set(feeKeys).size
     );
+    const businessFee = (feesResponse.data.fees || []).find(
+        (fee) =>
+            (fee.business?._id || fee.business) ===
+            (createdCar.business?._id || createdCar.business)
+    );
+    const driverFee = (feesResponse.data.fees || []).find(
+        (fee) =>
+            (fee.independentDriver?._id || fee.independentDriver) ===
+            independentDriverProfile._id
+    );
     check(
-        "Current open period does not generate an independent-driver fee",
-        !(feesResponse.data.fees || []).some(
-            (fee) =>
-                (fee.independentDriver?._id || fee.independentDriver) ===
-                independentDriverProfile._id
+        "Closed-period business and driver fees generated",
+        Boolean(businessFee && driverFee)
+    );
+    check(
+        "Generated fee deadlines belong to closed historical periods",
+        [businessFee, driverFee].every(
+            (fee) => new Date(fee.dueAt).getTime() < Date.now()
         )
     );
+    await logout();
+
+    await login(owner.email, password, "/owner", "Business Dashboard");
+    await navigate("/owner/fees", businessFee.period);
+    await clickRowAction(businessFee.period, "Upload proof");
+    await setFile('.fixed input[type="file"]');
+    await clickText("Upload", "button", ".fixed");
+    await waitUntil(async () => {
+        const fees = await readApi("/api/business/fees", ownerToken);
+        return fees.data.fees?.find(
+            (fee) =>
+                fee._id === businessFee._id &&
+                fee.payment_status === "pending_verification" &&
+                fee.proof_attachment?.url
+        );
+    }, 60000);
+    check("Business uploaded platform-fee proof through UI", true);
+    await logout();
+
+    await login(
+        independentDriver.email,
+        password,
+        "/driver",
+        "Driver Dashboard"
+    );
+    await navigate("/driver/fees", driverFee.period);
+    await clickRowAction(driverFee.period, "Upload proof");
+    await setFile('.fixed input[type="file"]');
+    await clickText("Upload", "button", ".fixed");
+    await waitUntil(async () => {
+        const fees = await readApi("/api/driver/fees", independentDriverToken);
+        return fees.data.fees?.find(
+            (fee) =>
+                fee._id === driverFee._id &&
+                fee.payment_status === "pending_verification" &&
+                fee.proof_attachment?.url
+        );
+    }, 60000);
+    check("Independent driver uploaded platform-fee proof through UI", true);
+    await logout();
+
+    await login(ADMIN_EMAIL, ADMIN_PASSWORD, "/admin", "Admin Dashboard");
+    await navigate("/admin/fees", owner.business);
+    check(
+        "Admin platform-fee proofs are visible",
+        await evaluate(
+            `[...document.querySelectorAll("button")].filter((button) => button.textContent.trim() === "View proof").length >= 2`
+        )
+    );
+    await clickRowAction(owner.business, "Verify", true);
+    await waitUntil(async () => {
+        const fees = await readApi("/api/admin/fees?limit=50", adminToken);
+        return fees.data.fees?.find(
+            (fee) =>
+                fee._id === businessFee._id &&
+                fee.payment_status === "paid"
+        );
+    });
+    await waitFor(
+        `[...document.querySelectorAll("tr")].some((row) =>
+            row.innerText.includes(${JSON.stringify(independentDriver.name)}) &&
+            [...row.querySelectorAll("button")].some((button) =>
+                button.textContent.trim() === "Verify"
+            )
+        )`
+    );
+    await clickRowAction(independentDriver.name, "Verify", true);
+    await waitUntil(async () => {
+        const fees = await readApi("/api/admin/fees?limit=50", adminToken);
+        return fees.data.fees?.find(
+            (fee) =>
+                fee._id === driverFee._id &&
+                fee.payment_status === "paid"
+        );
+    });
+    check("Admin verified business and driver platform fees through UI", true);
+
+    await navigate("/admin/businesses", owner.business);
+    await clickRowAction(owner.business, "Block");
+    await setValues(".fixed textarea", ["E2E business block check"]);
+    await clickText("Block", "button", ".fixed");
+    await waitUntil(async () => {
+        const businesses = await readApi("/api/admin/businesses?limit=50", adminToken);
+        return businesses.data.businesses?.find(
+            (item) => item.name === owner.business && item.status === "blocked"
+        );
+    });
+    await waitFor(
+        `[...document.querySelectorAll("tr")].some((row) =>
+            row.innerText.includes(${JSON.stringify(owner.business)}) &&
+            [...row.querySelectorAll("button")].some((button) =>
+                button.textContent.trim() === "Unblock"
+            )
+        )`
+    );
+    await clickRowAction(owner.business, "Unblock");
+    await waitUntil(async () => {
+        const businesses = await readApi("/api/admin/businesses?limit=50", adminToken);
+        return businesses.data.businesses?.find(
+            (item) => item.name === owner.business && item.status === "active"
+        );
+    });
+    check("Admin blocked and unblocked a business through UI", true);
+
+    await navigate("/admin/drivers", independentDriver.name);
+    await clickRowAction(independentDriver.name, "Block");
+    await setValues(".fixed textarea", ["E2E driver block check"]);
+    await clickText("Block", "button", ".fixed");
+    await waitUntil(async () => {
+        const drivers = await readApi("/api/admin/drivers?limit=50", adminToken);
+        return drivers.data.drivers?.find(
+            (item) =>
+                item._id === independentDriverProfile._id &&
+                item.status === "inactive"
+        );
+    });
+    await waitFor(
+        `[...document.querySelectorAll("tr")].some((row) =>
+            row.innerText.includes(${JSON.stringify(independentDriver.name)}) &&
+            [...row.querySelectorAll("button")].some((button) =>
+                button.textContent.trim() === "Unblock"
+            )
+        )`
+    );
+    await clickRowAction(independentDriver.name, "Unblock");
+    await waitUntil(async () => {
+        const drivers = await readApi("/api/admin/drivers?limit=50", adminToken);
+        return drivers.data.drivers?.find(
+            (item) =>
+                item._id === independentDriverProfile._id &&
+                item.status === "active"
+        );
+    });
+    check("Admin blocked and unblocked an independent driver through UI", true);
+
+    await navigate("/admin/cars", car.model);
+    await clickRowAction(car.model, "Reject");
+    await setValues(".fixed textarea", ["E2E car rejection check"]);
+    await clickText("Reject", "button", ".fixed");
+    await waitUntil(async () => {
+        const cars = await readApi("/api/admin/cars?limit=50", adminToken);
+        return cars.data.cars?.find(
+            (item) =>
+                item._id === createdCar._id &&
+                item.verification_status === "rejected"
+        );
+    });
+    check("Admin rejected a car through UI", true);
+
+    await send("Emulation.setDeviceMetricsOverride", {
+        width: 390,
+        height: 844,
+        deviceScaleFactor: 1,
+        mobile: true,
+    });
+    await navigate("/admin", "Admin Dashboard");
+    check(
+        "Admin dashboard renders without horizontal page overflow on mobile",
+        await evaluate(`document.documentElement.scrollWidth <= innerWidth + 1`)
+    );
+    await send("Emulation.clearDeviceMetricsOverride");
     await logout();
 
     check(

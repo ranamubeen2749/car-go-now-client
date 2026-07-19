@@ -10,6 +10,8 @@ const STATUS_COLORS = {
 };
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
+const entityName = (fee) =>
+    fee.business?.name || fee.independentDriver?.name || fee.entity_id;
 
 const Fees = () => {
     const { axios, currency } = useAppContext();
@@ -55,7 +57,7 @@ const Fees = () => {
     };
 
     const handleVerify = async (fee) => {
-        if (!window.confirm(`Mark fee for ${fee.entity?.name || fee.entity_id} as paid?`))
+        if (!window.confirm(`Mark fee for ${entityName(fee)} as paid?`))
             return;
         try {
             const { data } = await axios.post("/api/admin/fees/verify", { feeId: fee._id });
@@ -135,7 +137,7 @@ const Fees = () => {
                             <tr key={fee._id} className="border-t border-borderColor">
                                 <td className="p-3 text-xs">
                                     <p className="font-medium">
-                                        {fee.entity?.name || fee.entity_id}
+                                        {entityName(fee)}
                                     </p>
                                     <p className="text-gray-500">{fee.entity_type}</p>
                                 </td>
