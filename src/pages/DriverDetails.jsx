@@ -309,6 +309,19 @@ const DriverDetails = () => {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2 className="text-xl font-semibold mb-2">Complete your payment</h2>
+                        <p className="text-sm text-gray-500 mb-3">
+                            Transfer the exact amount, then upload the screenshot for admin
+                            verification.
+                        </p>
+                        {createdBooking.paymentProofExpiresAt && (
+                            <p className="text-sm text-amber-700 mb-4">
+                                Upload by{" "}
+                                {new Date(
+                                    createdBooking.paymentProofExpiresAt
+                                ).toLocaleString()}
+                                . After that, this reservation expires.
+                            </p>
+                        )}
                         <div className="bg-light rounded-md p-4 space-y-1 mb-4 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-gray-500">Amount</span>

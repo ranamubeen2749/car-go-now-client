@@ -432,6 +432,15 @@ const CarDetails = () => {
                             Transfer the exact amount to the owner's bank account, then upload
                             the screenshot. The admin will verify it.
                         </p>
+                        {createdBooking.paymentProofExpiresAt && (
+                            <p className="text-sm text-amber-700 mb-4">
+                                Upload by{" "}
+                                {new Date(
+                                    createdBooking.paymentProofExpiresAt
+                                ).toLocaleString()}
+                                . After that, this reservation expires.
+                            </p>
+                        )}
 
                         <div className="bg-light rounded-md p-4 space-y-1 mb-4 text-sm">
                             <div className="flex justify-between">

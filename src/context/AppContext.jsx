@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +15,7 @@ export const AppProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem("token") || null);
     const [user, setUser] = useState(null);
     const [authLoading, setAuthLoading] = useState(Boolean(token));
+    const authRequest = useRef(0);
 
     // UI state
     const [showLogin, setShowLogin] = useState(false);
@@ -37,17 +38,20 @@ export const AppProvider = ({ children }) => {
     const isAdmin = currentRole === "super_admin";
 
     const fetchUser = async () => {
+        const requestId = ++authRequest.current;
         try {
             const { data } = await axios.get("/api/user/data");
             if (data.success) {
-                setUser(data.user);
+                if (requestId === authRequest.current) setUser(data.user);
                 return data.user;
-            } else {
+            } else if (requestId === authRequest.current) {
                 logout();
             }
         } catch (error) {
             console.error("fetchUser error:", error);
-            if (error.response?.status === 401) logout();
+            if (requestId === authRequest.current && error.response?.status === 401) {
+                logout();
+            }
         }
         return null;
     };
@@ -90,6 +94,7 @@ export const AppProvider = ({ children }) => {
     };
 
     const logout = () => {
+        authRequest.current += 1;
         localStorage.removeItem("token");
         setToken(null);
         setUser(null);

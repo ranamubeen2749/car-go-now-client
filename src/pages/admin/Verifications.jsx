@@ -591,17 +591,153 @@ export const PendingBookingPayments = () => {
     );
 };
 
-/* ============ Business Drivers info ============ */
-export const BusinessDriversInfo = () => (
-    <div className="border border-borderColor rounded-md p-6 bg-light text-sm text-gray-600 max-w-3xl">
-        <p className="font-medium text-base mb-2">Business drivers</p>
-        <p>
-            Business drivers are managed by the business owner that registered them. They do
-            not pass through a global verification queue — the owner approves or removes them
-            from their own dashboard.
-        </p>
-    </div>
-);
+/* ============ Pending Business Drivers ============ */
+export const PendingBusinessDrivers = () => {
+    const { axios } = useAppContext();
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [reason, setReason] = useState("");
+    const [preview, setPreview] = useState(null);
+
+    const fetchList = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await axios.get("/api/admin/business-drivers", {
+                params: { verification_status: "pending", limit: 50 },
+            });
+            if (data.success) setItems(data.drivers || []);
+            else toast.error(data.message);
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        } finally {
+            setLoading(false);
+        }
+    }, [axios]);
+
+    useEffect(() => {
+        fetchList();
+    }, [fetchList]);
+
+    const approve = async (driver) => {
+        try {
+            const { data } = await axios.post("/api/admin/business-driver/approve", {
+                driverId: driver._id,
+            });
+            if (data.success) {
+                toast.success(data.message);
+                fetchList();
+            } else toast.error(data.message);
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        }
+    };
+
+    const submitReject = async () => {
+        if (!rejectTarget || !reason.trim()) return toast.error("Reason is required");
+        try {
+            const { data } = await axios.post("/api/admin/business-driver/reject", {
+                driverId: rejectTarget._id,
+                reason: reason.trim(),
+            });
+            if (data.success) {
+                toast.success(data.message);
+                setRejectTarget(null);
+                setReason("");
+                fetchList();
+            } else toast.error(data.message);
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+        }
+    };
+
+    return (
+        <QueueTable
+            loading={loading}
+            empty="No business drivers awaiting approval."
+            count={items.length}
+            heading="Pending business drivers"
+        >
+            <thead className="bg-light text-gray-500">
+                <tr>
+                    <th className="p-3 text-left font-medium">Driver</th>
+                    <th className="p-3 text-left font-medium">Business</th>
+                    <th className="p-3 text-left font-medium">License</th>
+                    <th className="p-3 text-left font-medium">Created</th>
+                    <th className="p-3 text-left font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {items.map((driver) => (
+                    <tr key={driver._id} className="border-t border-borderColor align-top">
+                        <td className="p-3">
+                            <div className="font-medium">
+                                {driver.name}
+                                {driver.isOwnerSelf ? " (owner)" : ""}
+                            </div>
+                            <div className="text-xs text-gray-500">{driver.phone}</div>
+                        </td>
+                        <td className="p-3 text-xs">{driver.business?.name || "—"}</td>
+                        <td className="p-3">
+                            <div className="flex flex-wrap gap-2">
+                                {(driver.licenseDocuments || []).map((document) => (
+                                    <button
+                                        key={document._id}
+                                        onClick={() => setPreview(document.url)}
+                                        className="text-xs text-primary hover:underline"
+                                    >
+                                        View document
+                                    </button>
+                                ))}
+                                {!driver.licenseDocuments?.length && (
+                                    <span className="text-xs text-gray-400">No document</span>
+                                )}
+                            </div>
+                        </td>
+                        <td className="p-3 text-xs">{fmtDate(driver.createdAt)}</td>
+                        <td className="p-3">
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => approve(driver)}
+                                    className="px-2 py-1 bg-green-600 text-white rounded"
+                                >
+                                    Approve
+                                </button>
+                                <button
+                                    onClick={() => setRejectTarget(driver)}
+                                    className="px-2 py-1 bg-red-500 text-white rounded"
+                                >
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+            {rejectTarget && (
+                <ReasonModal
+                    title={`Reject ${rejectTarget.name}`}
+                    reason={reason}
+                    setReason={setReason}
+                    onCancel={() => setRejectTarget(null)}
+                    onSubmit={submitReject}
+                />
+            )}
+            {preview && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+                    onClick={() => setPreview(null)}
+                >
+                    <img
+                        src={preview}
+                        alt="Driver license"
+                        className="max-w-4xl max-h-[90vh]"
+                    />
+                </div>
+            )}
+        </QueueTable>
+    );
+};
 
 /* ============ Helpers ============ */
 const QueueTable = ({ loading, empty, count, heading, children }) => (

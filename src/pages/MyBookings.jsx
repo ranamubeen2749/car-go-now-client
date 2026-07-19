@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { assets } from "../assets/assets";
 import Title from "../components/Title";
 import { useAppContext } from "../context/AppContext";
@@ -37,6 +37,7 @@ const MyBookings = () => {
     const [tab, setTab] = useState("car"); // "car" | "driver"
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(false);
+    const fetchRequest = useRef(0);
 
     // Action modals
     const [proofTarget, setProofTarget] = useState(null);
@@ -48,6 +49,7 @@ const MyBookings = () => {
 
     const fetchBookings = useCallback(async () => {
         if (!user) return;
+        const requestId = ++fetchRequest.current;
         setLoading(true);
         try {
             const endpoint =
@@ -55,15 +57,15 @@ const MyBookings = () => {
                     ? "/api/bookings/car/my-bookings"
                     : "/api/bookings/driver/my-bookings";
             const { data } = await axios.get(endpoint);
-            if (data.success) {
+            if (data.success && requestId === fetchRequest.current) {
                 setBookings(data.bookings || []);
-            } else {
+            } else if (!data.success) {
                 toast.error(data.message || "Failed to load bookings");
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
         } finally {
-            setLoading(false);
+            if (requestId === fetchRequest.current) setLoading(false);
         }
     }, [axios, user, tab]);
 

@@ -3,11 +3,6 @@ import Title from "../../components/owner/Title";
 import { useAppContext } from "../../context/AppContext";
 import toast from "react-hot-toast";
 
-// NOTE: The independent-driver docs do NOT currently expose a
-// `PUT /api/driver/bank-details` endpoint. We attempt the call and
-// surface a clear error to the user / dev console so the missing
-// endpoint is obvious to the backend team.
-
 const BankDetails = () => {
     const { axios } = useAppContext();
     const [driver, setDriver] = useState(null);
@@ -42,7 +37,6 @@ const BankDetails = () => {
         }
         setSaving(true);
         try {
-            // Targeted at the (unconfirmed) endpoint; backend team may need to add it.
             const { data } = await axios.put("/api/driver/bank-details", {
                 bank_name,
                 account_number,
@@ -55,9 +49,6 @@ const BankDetails = () => {
         } catch (error) {
             const msg = error.response?.data?.message || error.message;
             toast.error(msg);
-            console.warn(
-                "Driver bank-details endpoint may not exist on backend yet. See plan Phase 6 open questions."
-            );
         } finally {
             setSaving(false);
         }
