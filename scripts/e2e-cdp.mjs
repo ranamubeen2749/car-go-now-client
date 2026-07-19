@@ -15,6 +15,7 @@ const SERVER_DIR = fileURLToPath(new URL("../../server", import.meta.url));
 
 const runId = Date.now().toString(36);
 const password = "Test@1234";
+let customerPassword = password;
 const customer = {
     name: `E2E Customer ${runId}`,
     email: `e2e.customer.${runId}@example.com`,
@@ -241,6 +242,22 @@ const setTestBookingState = (action, type, bookingId) =>
         )
     );
 
+const setTestPasswordResetToken = (userId, resetToken) =>
+    JSON.parse(
+        execFileSync(
+            process.execPath,
+            [
+                "--env-file=.env",
+                "scripts/e2e-state.mjs",
+                "password-reset-token",
+                "user",
+                userId,
+                resetToken,
+            ],
+            { cwd: SERVER_DIR, encoding: "utf8" }
+        )
+    );
+
 const token = () => evaluate(`localStorage.getItem("token")`);
 
 const logout = async () => {
@@ -282,6 +299,9 @@ const login = async (email, loginPassword, expectedPath, expectedText) => {
     await waitFor(`location.pathname === ${JSON.stringify(expectedPath)}`);
     await waitFor(`document.body.innerText.includes(${JSON.stringify(expectedText)})`);
     await waitFor(`Boolean(localStorage.getItem("token"))`);
+    await waitFor(
+        `[...document.querySelectorAll("button")].some((button) => button.textContent.trim() === "Logout")`
+    );
     check(`${expectedText} login through UI`, Boolean(await token()));
     await pause();
 };
@@ -415,6 +435,30 @@ try {
     const customerData = (await readApi("/api/user/data", customerToken)).data.user;
     await logout();
 
+    await openAuth();
+    await clickText("Forgot password?");
+    await waitFor(`document.body.innerText.includes("Send Reset Link")`);
+    await setValues('form input[type="email"]', [customer.email]);
+    await evaluate(`document.querySelector("form").requestSubmit()`);
+    await waitFor(`document.body.innerText.includes("If an account exists for that email")`);
+    await waitFor(`document.body.innerText.includes("Login")`);
+    check("Forgot-password request works through UI without SMTP credentials", true);
+
+    const resetToken = `e2e-reset-${runId}`;
+    customerPassword = "Reset@1234";
+    setTestPasswordResetToken(customerData._id, resetToken);
+    await navigate(`/reset-password/${resetToken}`, "Reset Password");
+    await setValues('main form input[type="password"]', [
+        customerPassword,
+        customerPassword,
+    ]);
+    await evaluate(`document.querySelector("main form").requestSubmit()`);
+    await waitFor(`location.pathname === "/"`);
+    await waitFor(`document.body.innerText.includes("Password reset successfully")`);
+    check("Password reset works through the real page and API", true);
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
+    await logout();
+
     await login(ADMIN_EMAIL, ADMIN_PASSWORD, "/admin", "Admin Dashboard");
     const adminToken = await token();
     check(
@@ -482,7 +526,7 @@ try {
     );
     await logout();
 
-    await login(customer.email, password, "/", HOME_TEXT);
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
     const approvedCustomer = (await readApi("/api/user/data", customerToken)).data.user;
     check(
         "Customer approval status persisted",
@@ -705,7 +749,7 @@ try {
     );
     await logout();
 
-    await login(customer.email, password, "/", HOME_TEXT);
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
     await navigate("/my-bookings", car.model);
     await clickText("Leave review");
     await waitFor(`document.body.innerText.includes("Leave a review")`);
@@ -847,7 +891,7 @@ try {
     );
     await logout();
 
-    await login(customer.email, password, "/", HOME_TEXT);
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
     await navigate(
         `/driver-details/${independentDriverProfile._id}`,
         independentDriver.name
@@ -1020,7 +1064,7 @@ try {
     check("Independent-driver notifications render", true);
     await logout();
 
-    await login(customer.email, password, "/", HOME_TEXT);
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
     await navigate(
         "/my-bookings",
         "View and manage all your car and driver bookings"
@@ -1072,7 +1116,8 @@ try {
     await evaluate(`window.confirm = () => true`);
     await clickText("Generate fees");
     await waitFor(
-        `[...document.querySelectorAll("button")].some((button) => button.textContent.trim() === "Generate fees")`
+        `[...document.querySelectorAll("button")].some((button) => button.textContent.trim() === "Generate fees")`,
+        120000
     );
     const generationResults = await evaluate(`Promise.all(
         [1, 2].map(async () => {

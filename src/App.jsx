@@ -15,6 +15,7 @@ import Drivers from "./pages/Drivers";
 import DriverDetails from "./pages/DriverDetails";
 import MyBookings from "./pages/MyBookings";
 import AccountLicense from "./pages/AccountLicense";
+import ResetPassword from "./pages/ResetPassword";
 
 // Owner pages
 import OwnerLayout from "./pages/owner/Layout";
@@ -80,6 +81,7 @@ const App = () => {
                 <Route path="/driver-details/:id" element={<DriverDetails />} />
                 <Route path="/my-bookings" element={<MyBookings />} />
                 <Route path="/account/license" element={<AccountLicense />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
 
                 {/* Owner */}
                 <Route

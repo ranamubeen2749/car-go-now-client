@@ -60,7 +60,10 @@ const Login = () => {
             let endpoint = "";
             let payload = {};
 
-            if (state === "login") {
+            if (state === "forgot") {
+                endpoint = "/api/user/forgot-password";
+                payload = { email };
+            } else if (state === "login") {
                 endpoint = "/api/user/login";
                 payload = { email, password };
             } else if (role === "customer") {
@@ -95,6 +98,12 @@ const Login = () => {
             const { data } = await axios.post(endpoint, payload);
 
             if (data.success) {
+                if (state === "forgot") {
+                    toast.success(data.message);
+                    setState("login");
+                    return;
+                }
+
                 // Prime axios with the new token so the next request authenticates,
                 // then fetch user to know the destination role.
                 axios.defaults.headers.common["Authorization"] = data.token;
@@ -136,9 +145,19 @@ const Login = () => {
             >
                 <p className="text-2xl font-medium text-center">
                     <span className="text-primary">
-                        {state === "login" ? "Login" : "Sign Up"}
+                        {state === "login"
+                            ? "Login"
+                            : state === "forgot"
+                            ? "Forgot Password"
+                            : "Sign Up"}
                     </span>
                 </p>
+
+                {state === "forgot" && (
+                    <p className="text-center">
+                        Enter your account email and we will send you a reset link.
+                    </p>
+                )}
 
                 {state === "register" && (
                     <div className="flex bg-gray-100 rounded-md p-1 mb-2">
@@ -202,17 +221,29 @@ const Login = () => {
                     />
                 </div>
 
-                <div className="w-full">
-                    <p>Password</p>
-                    <input
-                        onChange={(e) => setPassword(e.target.value)}
-                        value={password}
-                        className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
-                        type="password"
-                        required
-                        minLength={8}
-                    />
-                </div>
+                {state !== "forgot" && (
+                    <div className="w-full">
+                        <p>Password</p>
+                        <input
+                            onChange={(e) => setPassword(e.target.value)}
+                            value={password}
+                            className="border border-gray-200 rounded w-full p-2 mt-1 outline-primary"
+                            type="password"
+                            required
+                            minLength={8}
+                        />
+                    </div>
+                )}
+
+                {state === "login" && (
+                    <button
+                        type="button"
+                        onClick={() => setState("forgot")}
+                        className="self-end text-primary hover:underline"
+                    >
+                        Forgot password?
+                    </button>
+                )}
 
                 {state === "register" && role === "business" && (
                     <>
@@ -340,10 +371,21 @@ const Login = () => {
                         ? "Please wait…"
                         : state === "register"
                         ? "Create Account"
+                        : state === "forgot"
+                        ? "Send Reset Link"
                         : "Login"}
                 </button>
 
-                {state === "register" ? (
+                {state === "forgot" ? (
+                    <p className="text-center mt-2">
+                        <span
+                            onClick={() => setState("login")}
+                            className="text-primary cursor-pointer hover:underline"
+                        >
+                            Back to login
+                        </span>
+                    </p>
+                ) : state === "register" ? (
                     <p className="text-center mt-2">
                         Already have an account?{" "}
                         <span
