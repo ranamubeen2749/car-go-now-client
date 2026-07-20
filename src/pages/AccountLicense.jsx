@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import Title from "../components/Title";
 import { useAppContext } from "../context/AppContext";
-import toast from "react-hot-toast";
 
-const STATUS_COLORS = {
-    pending: "bg-yellow-100 text-yellow-700",
-    approved: "bg-green-100 text-green-700",
-    rejected: "bg-red-100 text-red-700",
-    not_submitted: "bg-gray-100 text-gray-600",
+const STATUS_STYLES = {
+    pending: "border-amber-200 bg-amber-50 text-amber-700",
+    approved: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    rejected: "border-red-200 bg-red-50 text-red-700",
+    not_submitted: "border-slate-200 bg-slate-50 text-slate-600",
 };
 
-const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "—");
+const fmtDate = (date) => (date ? new Date(date).toLocaleDateString() : "—");
 
 const AccountLicense = () => {
     const { axios, user, fetchUser } = useAppContext();
@@ -19,7 +19,7 @@ const AccountLicense = () => {
     const [uploading, setUploading] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const fetchLicenses = async () => {
+    const fetchLicenses = useCallback(async () => {
         setLoading(true);
         try {
             const { data } = await axios.get("/api/user/license/my-licenses");
@@ -30,33 +30,30 @@ const AccountLicense = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [axios]);
 
     useEffect(() => {
         if (user) fetchLicenses();
-    }, [user]);
+    }, [user, fetchLicenses]);
 
-    const handleUpload = async (e) => {
-        e.preventDefault();
-        if (!files.length) {
-            toast.error("Please select at least one license file");
-            return;
-        }
-        if (files.length > 5) {
-            toast.error("Max 5 files allowed");
-            return;
-        }
+    const handleUpload = async (event) => {
+        event.preventDefault();
+        if (!files.length) return toast.error("Please select at least one license file");
+        if (files.length > 5) return toast.error("Max 5 files allowed");
+
         setUploading(true);
         try {
             const formData = new FormData();
-            files.forEach((f) => formData.append("licenses", f));
+            files.forEach((file) => formData.append("licenses", file));
             const { data } = await axios.post("/api/user/license/upload", formData);
             if (data.success) {
                 toast.success(data.message);
                 setFiles([]);
-                e.target.reset();
+                event.target.reset();
                 await Promise.all([fetchLicenses(), fetchUser?.()]);
-            } else toast.error(data.message);
+            } else {
+                toast.error(data.message);
+            }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
         } finally {
@@ -73,7 +70,9 @@ const AccountLicense = () => {
             if (data.success) {
                 toast.success(data.message);
                 fetchLicenses();
-            } else toast.error(data.message);
+            } else {
+                toast.error(data.message);
+            }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
         }
@@ -81,151 +80,177 @@ const AccountLicense = () => {
 
     if (!user) {
         return (
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16">
-                <Title title="My Driving License" subTitle="Please log in" align="left" />
-            </div>
+            <main className="min-h-[65vh] bg-light px-6 py-14 sm:px-8 lg:px-12">
+                <div className="mx-auto max-w-5xl">
+                    <Title
+                        title="My Driving License"
+                        subTitle="Please log in to manage your license verification."
+                        align="left"
+                    />
+                </div>
+            </main>
         );
     }
 
     const status = user.verificationStatus || "not_submitted";
-    const isVerified = !!user.isVerified;
+    const isVerified = Boolean(user.isVerified);
 
     return (
-        <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 max-w-4xl">
-            <Title
-                title="My Driving License"
-                subTitle="Upload one or more driving license documents. Admin verifies these before you can book a self-drive car."
-                align="left"
-            />
+        <main className="min-h-screen bg-light px-6 py-14 sm:px-8 lg:px-12">
+            <div className="mx-auto max-w-5xl">
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <Title
+                        eyebrow="Customer verification"
+                        title="My Driving License"
+                        subTitle="Upload your license for admin review before booking a self-drive car."
+                        align="left"
+                    />
+                    <div
+                        className={`rounded-2xl border px-5 py-4 ${
+                            STATUS_STYLES[status] || STATUS_STYLES.not_submitted
+                        }`}
+                    >
+                        <p className="text-xs font-bold uppercase tracking-[0.14em]">
+                            Verification status
+                        </p>
+                        <p className="mt-1 text-lg font-semibold capitalize">
+                            {status.replace(/_/g, " ")}
+                        </p>
+                    </div>
+                </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-                <span className="text-gray-500">Verification status:</span>
-                <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        STATUS_COLORS[status] || STATUS_COLORS.not_submitted
-                    }`}
-                >
-                    {status.replace("_", " ")}
-                </span>
-                {isVerified && (
-                    <span className="text-green-700 text-xs">
-                        Verified — you can book self-drive cars.
-                    </span>
-                )}
-                {!isVerified && status === "pending" && attachments.length > 0 && (
-                    <span className="text-yellow-700 text-xs">
-                        Awaiting admin review.
-                    </span>
-                )}
-            </div>
+                <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
+                    <section className="ui-card overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-borderColor px-5 py-4 sm:px-6">
+                            <div>
+                                <h2 className="font-semibold text-ink">Submitted documents</h2>
+                                <p className="mt-1 text-xs text-muted">
+                                    {attachments.length} of 5 files uploaded
+                                </p>
+                            </div>
+                            {isVerified && (
+                                <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                    Self-drive enabled
+                                </span>
+                            )}
+                        </div>
 
-            <div className="border border-borderColor rounded-md overflow-hidden mt-6">
-                <table className="w-full text-sm">
-                    <thead className="bg-light text-gray-500">
-                        <tr>
-                            <th className="text-left p-3 font-medium">Preview</th>
-                            <th className="text-left p-3 font-medium">Category</th>
-                            <th className="text-left p-3 font-medium">Submitted</th>
-                            <th className="p-3 font-medium" />
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading && (
-                            <tr>
-                                <td colSpan={4} className="p-6 text-center text-gray-500">
-                                    Loading…
-                                </td>
-                            </tr>
-                        )}
-                        {!loading && attachments.length === 0 && (
-                            <tr>
-                                <td colSpan={4} className="p-6 text-center text-gray-500">
-                                    No license uploaded yet.
-                                </td>
-                            </tr>
-                        )}
-                        {!loading &&
-                            attachments.map((a) => (
-                                <tr key={a._id} className="border-t border-borderColor">
-                                    <td className="p-3">
-                                        {a.thumbnailUrl || a.url ? (
+                        {loading ? (
+                            <div className="p-10 text-center text-sm text-muted">Loading…</div>
+                        ) : attachments.length === 0 ? (
+                            <div className="p-10 text-center">
+                                <p className="font-semibold text-ink">No license uploaded yet</p>
+                                <p className="mt-2 text-sm text-muted">
+                                    Add a clear image or PDF using the upload panel.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-borderColor">
+                                {attachments.map((attachment) => (
+                                    <article
+                                        key={attachment._id}
+                                        className="flex items-center gap-4 p-4 sm:p-5"
+                                    >
+                                        {attachment.thumbnailUrl || attachment.url ? (
                                             <a
-                                                href={a.url}
+                                                href={attachment.url}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-block"
+                                                className="shrink-0"
                                             >
                                                 <img
-                                                    src={a.thumbnailUrl || a.url}
-                                                    alt="license"
-                                                    className="w-16 h-12 object-cover rounded border border-borderColor"
+                                                    src={attachment.thumbnailUrl || attachment.url}
+                                                    alt="Driving license preview"
+                                                    className="h-16 w-20 rounded-xl border border-borderColor object-cover"
                                                 />
                                             </a>
                                         ) : (
-                                            "—"
+                                            <div className="grid h-16 w-20 shrink-0 place-items-center rounded-xl bg-slate-100 text-xs text-muted">
+                                                PDF
+                                            </div>
                                         )}
-                                    </td>
-                                    <td className="p-3 capitalize">
-                                        {(a.category || "driving_license").replace("_", " ")}
-                                    </td>
-                                    <td className="p-3">{fmtDate(a.createdAt)}</td>
-                                    <td className="p-3 text-right text-xs">
-                                        <a
-                                            href={a.url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="text-primary underline mr-3"
-                                        >
-                                            View
-                                        </a>
-                                        <button
-                                            onClick={() => handleDelete(a._id)}
-                                            className="text-red-500 disabled:opacity-50"
-                                            disabled={isVerified}
-                                            title={
-                                                isVerified
-                                                    ? "Verified licenses cannot be removed"
-                                                    : ""
-                                            }
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                    </tbody>
-                </table>
-            </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate font-semibold capitalize text-ink">
+                                                {(attachment.category || "driver_license").replace(
+                                                    /_/g,
+                                                    " "
+                                                )}
+                                            </p>
+                                            <p className="mt-1 text-xs text-muted">
+                                                Submitted {fmtDate(attachment.createdAt)}
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 gap-2">
+                                            <a
+                                                href={attachment.url}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="ui-button ui-button-secondary"
+                                            >
+                                                View
+                                            </a>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDelete(attachment._id)}
+                                                className="ui-button ui-button-secondary text-red-600"
+                                                disabled={isVerified}
+                                                title={
+                                                    isVerified
+                                                        ? "Verified licenses cannot be removed"
+                                                        : ""
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
-            <form onSubmit={handleUpload} className="mt-10 max-w-xl flex flex-col gap-3 text-sm">
-                <h2 className="text-lg font-medium">Upload license documents</h2>
-                <p className="text-xs text-gray-500">
-                    You can upload up to 5 files at once (images or PDFs). Re-uploading sets your
-                    status back to pending until admin re-verifies.
-                </p>
-                <label>
-                    <span className="text-gray-500">License files</span>
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*,application/pdf"
-                        onChange={(e) => setFiles(Array.from(e.target.files || []))}
-                        className="w-full border border-borderColor rounded-md p-2 mt-1 outline-none"
-                    />
-                </label>
-                {files.length > 0 && (
-                    <div className="text-xs text-gray-500">
-                        Selected: {files.map((f) => f.name).join(", ")}
-                    </div>
-                )}
-                <button
-                    disabled={uploading || files.length === 0}
-                    className="bg-primary text-white rounded-md px-4 py-2 w-fit text-sm disabled:opacity-60 mt-2"
-                >
-                    {uploading ? "Uploading…" : "Upload"}
-                </button>
-            </form>
-        </div>
+                    <form onSubmit={handleUpload} className="ui-card p-5 sm:p-6 lg:sticky lg:top-24">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+                            Submit for review
+                        </p>
+                        <h2 className="mt-2 text-xl font-semibold text-ink">
+                            Upload license documents
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-muted">
+                            Add up to 5 image or PDF files. Re-uploading returns your status
+                            to pending.
+                        </p>
+
+                        <label className="mt-5 block rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm font-semibold text-slate-700 hover:border-primary">
+                            License files
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*,application/pdf"
+                                onChange={(event) =>
+                                    setFiles(Array.from(event.target.files || []))
+                                }
+                                className="mt-3 block w-full text-xs text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-2 file:font-semibold file:text-white"
+                            />
+                        </label>
+
+                        {files.length > 0 && (
+                            <p className="mt-3 break-words text-xs leading-5 text-muted">
+                                Selected: {files.map((file) => file.name).join(", ")}
+                            </p>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={uploading || files.length === 0}
+                            className="ui-button mt-5 min-h-11 w-full disabled:opacity-60"
+                        >
+                            {uploading ? "Uploading…" : "Upload"}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </main>
     );
 };
 

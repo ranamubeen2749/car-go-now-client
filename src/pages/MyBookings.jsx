@@ -24,7 +24,7 @@ const PAYMENT_COLORS = {
 const StatusBadge = ({ status, type = "status" }) => {
     const map = type === "payment" ? PAYMENT_COLORS : STATUS_COLORS;
     return (
-        <span className={`px-3 py-1 text-xs rounded-full ${map[status] || "bg-gray-100 text-gray-600"}`}>
+        <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${map[status] || "bg-gray-100 text-gray-600"}`}>
             {status?.replace(/_/g, " ") || "—"}
         </span>
     );
@@ -143,9 +143,15 @@ const MyBookings = () => {
 
     if (!user) {
         return (
-            <div className="px-6 md:px-16 lg:px-24 xl:px-32 mt-16 text-sm">
-                <Title title="My Bookings" subTitle="Please log in to see your bookings" align="left" />
-            </div>
+            <main className="min-h-[65vh] bg-light px-6 py-14 sm:px-8 lg:px-12">
+                <div className="mx-auto max-w-7xl">
+                    <Title
+                        title="My Bookings"
+                        subTitle="Please log in to see your bookings"
+                        align="left"
+                    />
+                </div>
+            </main>
         );
     }
 
@@ -154,32 +160,41 @@ const MyBookings = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="px-6 md:px-16 lg:px-24 xl:px-32 2xl:px-48 mt-16 text-sm max-w-7xl"
+            className="min-h-screen bg-light px-6 py-14 text-sm sm:px-8 lg:px-12"
         >
-            <Title
-                title="My Bookings"
-                subTitle="View and manage all your car and driver bookings"
-                align="left"
-            />
+            <div className="mx-auto max-w-7xl">
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                    <Title
+                        eyebrow="Your trips"
+                        title="My Bookings"
+                        subTitle="View and manage all your car and driver bookings"
+                        align="left"
+                    />
+                    <p className="text-sm text-muted">
+                        {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
+                    </p>
+                </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mt-6 border-b border-borderColor">
+            <div className="mt-8 inline-flex rounded-xl bg-slate-200/70 p-1">
                 <button
+                    type="button"
                     onClick={() => setTab("car")}
-                    className={`px-4 py-2 text-sm border-b-2 ${
+                    className={`min-h-10 rounded-lg px-4 text-sm font-semibold transition ${
                         tab === "car"
-                            ? "border-primary text-primary font-medium"
-                            : "border-transparent text-gray-500"
+                            ? "bg-white text-primary shadow-sm"
+                            : "text-slate-500 hover:text-ink"
                     }`}
                 >
                     Car Bookings
                 </button>
                 <button
+                    type="button"
                     onClick={() => setTab("driver")}
-                    className={`px-4 py-2 text-sm border-b-2 ${
+                    className={`min-h-10 rounded-lg px-4 text-sm font-semibold transition ${
                         tab === "driver"
-                            ? "border-primary text-primary font-medium"
-                            : "border-transparent text-gray-500"
+                            ? "bg-white text-primary shadow-sm"
+                            : "text-slate-500 hover:text-ink"
                     }`}
                 >
                     Driver Bookings
@@ -187,9 +202,16 @@ const MyBookings = () => {
             </div>
 
             <div>
-                {loading && <p className="text-gray-500 mt-6">Loading…</p>}
+                {loading && (
+                    <div className="ui-card mt-6 p-10 text-center text-muted">Loading…</div>
+                )}
                 {!loading && bookings.length === 0 && (
-                    <p className="text-gray-500 mt-6">No bookings yet.</p>
+                    <div className="ui-card mt-6 p-12 text-center">
+                        <p className="text-lg font-semibold text-ink">No bookings yet</p>
+                        <p className="mt-2 text-sm text-muted">
+                            Your car and driver bookings will appear here.
+                        </p>
+                    </div>
                 )}
 
                 {bookings.map((booking, index) => {
@@ -220,43 +242,43 @@ const MyBookings = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05, duration: 0.4 }}
-                            className="grid grid-cols-1 md:grid-cols-4 gap-6 p-6 border border-borderColor rounded-lg mt-5 first:mt-8"
+                            className="ui-card mt-5 grid grid-cols-1 gap-6 overflow-hidden p-5 first:mt-8 md:grid-cols-[220px_minmax(0,1fr)_150px] md:p-6"
                         >
                             {/* Subject (car or driver) */}
-                            <div className="md:col-span-1">
+                            <div>
                                 {isCar ? (
                                     <>
-                                        <div className="rounded-md overflow-hidden mb-3 bg-gray-100">
+                                        <div className="overflow-hidden rounded-2xl bg-slate-100">
                                             {carImage ? (
                                                 <img
                                                     src={carImage}
-                                                    alt=""
-                                                    className="w-full h-auto aspect-video object-cover"
+                                                    alt={`${subject?.brand || ""} ${subject?.model || ""}`}
+                                                    className="aspect-[16/10] h-full w-full object-cover"
                                                 />
                                             ) : (
-                                                <div className="aspect-video flex items-center justify-center text-gray-400 text-xs">
-                                                    no image
+                                                <div className="grid aspect-[16/10] place-items-center text-xs text-muted">
+                                                    No image
                                                 </div>
                                             )}
                                         </div>
-                                        <p className="text-lg font-medium mt-2">
+                                        <p className="mt-3 text-lg font-semibold text-ink">
                                             {subject?.brand} {subject?.model}
                                         </p>
-                                        <p className="text-gray-500">
+                                        <p className="mt-1 text-sm text-muted">
                                             {subject?.year} • {subject?.category} •{" "}
                                             {subject?.location}
                                         </p>
                                     </>
                                 ) : (
                                     <>
-                                        <div className="rounded-md bg-light p-4 text-center">
-                                            <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                                        <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50 p-5 text-center">
+                                            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary text-xl font-semibold text-white shadow-lg shadow-primary/20">
                                                 {subject?.name?.[0] || "D"}
                                             </div>
-                                            <p className="text-lg font-medium mt-3">
+                                            <p className="mt-3 text-lg font-semibold text-ink">
                                                 {subject?.name}
                                             </p>
-                                            <p className="text-gray-500 text-sm">
+                                            <p className="mt-1 text-sm text-muted">
                                                 {subject?.city}
                                             </p>
                                         </div>
@@ -265,29 +287,29 @@ const MyBookings = () => {
                             </div>
 
                             {/* Booking Info */}
-                            <div className="md:col-span-2">
+                            <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <p className="px-3 py-1.5 bg-light rounded">
+                                    <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                                         Booking #{index + 1}
                                     </p>
                                     <StatusBadge status={booking.status} />
                                     <StatusBadge status={booking.paymentStatus} type="payment" />
-                                    <span className="text-xs text-gray-500">
+                                    <span className="text-xs capitalize text-muted">
                                         {booking.paymentMethod}
                                     </span>
                                 </div>
 
-                                <div className="flex items-start gap-2 mt-3">
+                                <div className="mt-5 flex items-start gap-3">
                                     <img
                                         src={assets.calendar_icon_colored}
                                         alt=""
-                                        className="w-4 h-4 mt-1"
+                                        className="mt-1 h-4 w-4"
                                     />
                                     <div>
-                                        <p className="text-gray-500">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                                             {isCar ? "Rental Period" : "Hire Period"}
                                         </p>
-                                        <p>
+                                        <p className="mt-1 font-medium text-ink">
                                             {fmtDate(startDate)} → {fmtDate(endDate)}
                                             {isCar && booking.pickupTime && (
                                                 <span className="text-gray-500 text-xs ml-2">
@@ -350,27 +372,30 @@ const MyBookings = () => {
                                 )}
 
                                 {/* Actions */}
-                                <div className="flex flex-wrap gap-2 mt-4">
+                                <div className="mt-5 flex flex-wrap gap-2">
                                     {canUploadProof && (
                                         <button
+                                            type="button"
                                             onClick={() => setProofTarget(booking)}
-                                            className="px-3 py-1.5 bg-primary text-white text-xs rounded-md"
+                                            className="ui-button min-h-9 px-3 py-1 text-xs"
                                         >
                                             Upload payment proof
                                         </button>
                                     )}
                                     {canCancel && (
                                         <button
+                                            type="button"
                                             onClick={() => handleCancel(booking)}
-                                            className="px-3 py-1.5 border border-borderColor text-xs rounded-md"
+                                            className="ui-button ui-button-secondary min-h-9 px-3 py-1 text-xs"
                                         >
                                             Cancel
                                         </button>
                                     )}
                                     {canReview && (
                                         <button
+                                            type="button"
                                             onClick={() => setReviewTarget(booking)}
-                                            className="px-3 py-1.5 bg-amber-500 text-white text-xs rounded-md"
+                                            className="inline-flex min-h-9 items-center rounded-xl bg-amber-500 px-3 text-xs font-semibold text-white hover:bg-amber-600"
                                         >
                                             Leave review
                                         </button>
@@ -379,14 +404,18 @@ const MyBookings = () => {
                             </div>
 
                             {/* Price */}
-                            <div className="md:col-span-1 flex flex-col justify-between gap-6">
-                                <div className="text-sm text-gray-500 text-right">
-                                    <p>Total Price</p>
-                                    <h1 className="text-2xl font-semibold text-primary">
+                            <div className="border-t border-borderColor pt-5 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+                                <div className="text-sm text-muted md:text-right">
+                                    <p className="text-xs font-semibold uppercase tracking-wide">
+                                        Total price
+                                    </p>
+                                    <p className="mt-2 text-2xl font-semibold text-ink">
                                         {currency}
                                         {booking.price}
-                                    </h1>
-                                    <p>Booked on {fmtDate(booking.createdAt)}</p>
+                                    </p>
+                                    <p className="mt-2 text-xs">
+                                        Booked {fmtDate(booking.createdAt)}
+                                    </p>
                                 </div>
                             </div>
                         </motion.div>
@@ -397,20 +426,25 @@ const MyBookings = () => {
             {/* Upload proof modal */}
             {proofTarget && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
                     onClick={() => setProofTarget(null)}
                 >
                     <div
-                        className="bg-white rounded-xl p-6 max-w-md w-full"
+                        className="ui-card w-full max-w-md p-6 sm:p-7"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h2 className="text-xl font-semibold mb-2">Upload payment proof</h2>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+                            Bank transfer
+                        </p>
+                        <h2 className="mt-2 text-2xl font-semibold text-ink">
+                            Upload payment proof
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-muted">
                             Upload a screenshot of your bank transfer. The super admin will review
                             and verify it.
                         </p>
                         {proofTarget.paymentProofExpiresAt && (
-                            <p className="text-sm text-amber-700 mb-4">
+                            <p className="mt-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">
                                 Upload by{" "}
                                 {new Date(proofTarget.paymentProofExpiresAt).toLocaleString()}.
                             </p>
@@ -419,22 +453,24 @@ const MyBookings = () => {
                             type="file"
                             accept="image/*"
                             onChange={(e) => setProofFile(e.target.files[0])}
-                            className="w-full border border-borderColor rounded-md p-2 text-sm mb-4"
+                            className="ui-field mt-5 text-sm"
                         />
-                        <div className="flex gap-3">
+                        <div className="mt-5 flex gap-3">
                             <button
+                                type="button"
                                 onClick={() => {
                                     setProofTarget(null);
                                     setProofFile(null);
                                 }}
-                                className="flex-1 border border-borderColor rounded-md py-2 text-sm"
+                                className="ui-button ui-button-secondary flex-1"
                             >
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 disabled={!proofFile}
                                 onClick={handleUploadProof}
-                                className="flex-1 bg-primary text-white rounded-md py-2 text-sm disabled:opacity-60"
+                                className="ui-button flex-1 disabled:opacity-60"
                             >
                                 Upload
                             </button>
@@ -446,42 +482,49 @@ const MyBookings = () => {
             {/* Review modal */}
             {reviewTarget && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm"
                     onClick={() => setReviewTarget(null)}
                 >
                     <div
-                        className="bg-white rounded-xl p-6 max-w-md w-full"
+                        className="ui-card w-full max-w-md p-6 sm:p-7"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h2 className="text-xl font-semibold mb-2">Leave a review</h2>
-                        <label className="block text-sm mb-1">Rating</label>
-                        <div className="flex gap-1 mb-4">
+                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">
+                            Share your experience
+                        </p>
+                        <h2 className="mt-2 text-2xl font-semibold text-ink">Leave a review</h2>
+                        <label className="mt-5 block text-sm font-semibold text-slate-700">
+                            Rating
+                        </label>
+                        <div className="mt-2 flex gap-2">
                             {[1, 2, 3, 4, 5].map((n) => (
                                 <button
                                     key={n}
                                     type="button"
                                     onClick={() => setRating(n)}
-                                    className={`w-8 h-8 rounded-full ${
+                                    className={`h-9 w-9 rounded-xl font-semibold ${
                                         rating >= n
                                             ? "bg-amber-400 text-white"
-                                            : "bg-gray-100 text-gray-500"
+                                            : "bg-slate-100 text-muted"
                                     }`}
                                 >
                                     {n}
                                 </button>
                             ))}
                         </div>
-                        <label className="block text-sm mb-1">Comment</label>
+                        <label className="mt-5 block text-sm font-semibold text-slate-700">
+                            Comment
+                        </label>
                         <textarea
                             rows={3}
                             value={comment}
                             onChange={(e) => setComment(e.target.value)}
-                            className="w-full border border-borderColor rounded-md p-2 text-sm mb-4"
+                            className="ui-field mt-1.5 min-h-24 resize-y"
                         />
                         {tab === "car" &&
                             reviewTarget.withDriver &&
                             reviewTarget.businessDriver && (
-                                <label className="flex items-center gap-2 text-sm mb-4">
+                                <label className="mt-4 flex items-center gap-2 text-sm text-slate-700">
                                     <input
                                         type="checkbox"
                                         checked={rateDriver}
@@ -491,16 +534,18 @@ const MyBookings = () => {
                                     {reviewTarget.businessDriver.name})
                                 </label>
                             )}
-                        <div className="flex gap-3">
+                        <div className="mt-5 flex gap-3">
                             <button
+                                type="button"
                                 onClick={() => setReviewTarget(null)}
-                                className="flex-1 border border-borderColor rounded-md py-2 text-sm"
+                                className="ui-button ui-button-secondary flex-1"
                             >
                                 Cancel
                             </button>
                             <button
+                                type="button"
                                 onClick={handleSubmitReview}
-                                className="flex-1 bg-primary text-white rounded-md py-2 text-sm"
+                                className="ui-button flex-1"
                             >
                                 Submit
                             </button>
@@ -508,6 +553,7 @@ const MyBookings = () => {
                     </div>
                 </div>
             )}
+            </div>
         </motion.div>
     );
 };
