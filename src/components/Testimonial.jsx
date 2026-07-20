@@ -1,26 +1,22 @@
 import { motion } from "motion/react";
-import { assets } from "../assets/assets";
 import Title from "./Title";
 
 const testimonials = [
     {
         name: "Ayesha Khan",
         location: "Lahore",
-        image: assets.testimonial_image_1,
         testimonial:
             "The car matched the listing, pickup was straightforward, and every booking update was easy to follow.",
     },
     {
         name: "Hassan Ali",
         location: "Karachi",
-        image: assets.testimonial_image_2,
         testimonial:
             "I booked a car with a driver for a family trip. Comparing the options in one place saved a lot of time.",
     },
     {
         name: "Fatima Malik",
         location: "Islamabad",
-        image: assets.testimonial_image_1,
         testimonial:
             "The clear pricing and payment status made the whole rental feel much more dependable.",
     },
@@ -51,16 +47,9 @@ const Testimonial = () => (
                         <blockquote className="mt-5 flex-1 text-base leading-7 text-slate-600">
                             “{item.testimonial}”
                         </blockquote>
-                        <div className="mt-7 flex items-center gap-3 border-t border-borderColor pt-5">
-                            <img
-                                src={item.image}
-                                alt=""
-                                className="h-11 w-11 rounded-full object-cover"
-                            />
-                            <div>
-                                <p className="font-semibold text-ink">{item.name}</p>
-                                <p className="text-sm text-muted">{item.location}, Pakistan</p>
-                            </div>
+                        <div className="mt-7 border-t border-borderColor pt-5">
+                            <p className="font-semibold text-ink">{item.name}</p>
+                            <p className="text-sm text-muted">{item.location}, Pakistan</p>
                         </div>
                     </motion.article>
                 ))}

@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 import CarCard from "./CarCard";
+import PageState from "./PageState";
 
 const CarListingsResults = ({
     query,
@@ -28,8 +29,13 @@ const CarListingsResults = ({
             </div>
 
             {loading && displayedCars.length === 0 ? (
-                <div className="ui-card mt-5 grid min-h-56 place-items-center text-sm text-muted">
-                    Finding available cars…
+                <div className="ui-card mt-5">
+                    <PageState
+                        compact
+                        loading
+                        title="Finding available cars"
+                        description="Checking the latest verified listings…"
+                    />
                 </div>
             ) : displayedCars.length === 0 ? (
                 <div className="ui-card mt-5 px-6 py-14 text-center">

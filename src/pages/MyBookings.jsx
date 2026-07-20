@@ -4,6 +4,7 @@ import Title from "../components/Title";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import { motion } from "motion/react";
+import PageState from "../components/PageState";
 
 const STATUS_COLORS = {
     awaiting_payment_proof: "bg-amber-100 text-amber-700",
@@ -203,7 +204,14 @@ const MyBookings = () => {
 
             <div>
                 {loading && (
-                    <div className="ui-card mt-6 p-10 text-center text-muted">Loading…</div>
+                    <div className="ui-card mt-6">
+                        <PageState
+                            compact
+                            loading
+                            title="Loading your bookings"
+                            description="Getting the latest booking and payment status…"
+                        />
+                    </div>
                 )}
                 {!loading && bookings.length === 0 && (
                     <div className="ui-card mt-6 p-12 text-center">

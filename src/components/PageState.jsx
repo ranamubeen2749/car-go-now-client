@@ -1,6 +1,8 @@
-const PageState = ({ title, description, loading = false }) => (
+const PageState = ({ title, description, loading = false, compact = false }) => (
     <div
-        className="flex min-h-[45vh] flex-col items-center justify-center px-6 text-center"
+        className={`flex flex-col items-center justify-center px-6 text-center ${
+            compact ? "min-h-56" : "min-h-[45vh]"
+        }`}
         role={loading ? "status" : undefined}
     >
         {loading && (

@@ -87,15 +87,15 @@ const CarListingsFilter = ({
                 </button>
             </form>
 
-            <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-borderColor bg-slate-50 px-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/10">
+            <label className="ui-search-field mt-4 flex h-12 items-center gap-3 rounded-xl border border-borderColor bg-slate-50 px-4 transition">
                 <img src={assets.search_icon} alt="" className="h-4 w-4 opacity-60" />
-                <span className="sr-only">Search visible cars</span>
+                <span className="sr-only">Search cars</span>
                 <input
                     onChange={(event) => setInput(event.target.value)}
                     value={input}
                     type="search"
                     placeholder="Search make, model, category, or transmission"
-                    className="h-full min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-slate-400"
+                    className="h-full min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-slate-400"
                     disabled={!query}
                 />
             </label>

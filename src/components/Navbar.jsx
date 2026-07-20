@@ -78,8 +78,11 @@ const Navbar = () => {
             : currentRole === "independent_driver"
               ? ["Driver Dashboard", "/driver"]
               : currentRole === "super_admin"
-                ? ["Admin Panel", "/admin"]
-                : null;
+              ? ["Admin Panel", "/admin"]
+              : null;
+    const visibleMenuLinks = menuLinks.filter(
+        (link) => link.path !== "/my-bookings" || user
+    );
 
     return (
         <>
@@ -93,7 +96,7 @@ const Navbar = () => {
                     <Brand />
 
                     <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary navigation">
-                        {menuLinks.map((link) => (
+                        {visibleMenuLinks.map((link) => (
                             <NavLink
                                 key={link.path}
                                 to={link.path}
@@ -237,7 +240,7 @@ const Navbar = () => {
                         className="flex-1 space-y-1 overflow-y-auto p-4"
                         aria-label="Mobile navigation"
                     >
-                        {menuLinks.map((link) => (
+                        {visibleMenuLinks.map((link) => (
                             <NavLink
                                 key={link.path}
                                 to={link.path}

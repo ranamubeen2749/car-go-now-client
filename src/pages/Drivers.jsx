@@ -5,6 +5,7 @@ import DriverCard from "../components/DriverCard";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import { motion } from "motion/react";
+import PageState from "../components/PageState";
 
 const Drivers = () => {
     const { axios } = useAppContext();
@@ -137,11 +138,22 @@ const Drivers = () => {
                         : `${total} ${total === 1 ? "driver" : "drivers"} available`}
                 </p>
 
-                <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {drivers.map((d) => (
-                        <DriverCard key={d._id} driver={d} />
-                    ))}
-                </div>
+                {loading && drivers.length === 0 ? (
+                    <div className="ui-card mt-5">
+                        <PageState
+                            compact
+                            loading
+                            title="Finding available drivers"
+                            description="Checking the latest verified profiles…"
+                        />
+                    </div>
+                ) : (
+                    <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                        {drivers.map((d) => (
+                            <DriverCard key={d._id} driver={d} />
+                        ))}
+                    </div>
+                )}
 
                 {!loading && drivers.length === 0 && (
                     <div className="ui-card mt-5 px-6 py-14 text-center">

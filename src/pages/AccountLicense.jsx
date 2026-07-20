@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Title from "../components/Title";
 import { useAppContext } from "../context/AppContext";
+import PageState from "../components/PageState";
 
 const STATUS_STYLES = {
     pending: "border-amber-200 bg-amber-50 text-amber-700",
@@ -136,7 +137,12 @@ const AccountLicense = () => {
                         </div>
 
                         {loading ? (
-                            <div className="p-10 text-center text-sm text-muted">Loading…</div>
+                            <PageState
+                                compact
+                                loading
+                                title="Loading your documents"
+                                description="Checking the latest verification status…"
+                            />
                         ) : attachments.length === 0 ? (
                             <div className="p-10 text-center">
                                 <p className="font-semibold text-ink">No license uploaded yet</p>

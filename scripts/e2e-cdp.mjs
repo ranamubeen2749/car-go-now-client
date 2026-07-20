@@ -67,9 +67,11 @@ socket.onmessage = ({ data }) => {
     if (message.method === "Network.responseReceived") {
         const request = requests.get(message.params.requestId);
         if (request?.url.includes("/api/") && request.method !== "OPTIONS") {
+            const url = new URL(request.url);
             traffic.push({
                 method: request.method,
-                path: new URL(request.url).pathname,
+                path: url.pathname,
+                search: url.searchParams.get("search") || undefined,
                 status: message.params.response.status,
             });
         }
@@ -170,6 +172,19 @@ const setValues = async (selector, values) =>
                 element instanceof HTMLSelectElement ? "change" : "input",
                 { bubbles: true }
             ));
+        });
+    })()`);
+
+const setSearchValues = async (values) =>
+    evaluate(`(() => {
+        const input = document.querySelector('input[type="search"]');
+        const setValue = Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            "value"
+        ).set;
+        ${JSON.stringify(values)}.forEach((value) => {
+            setValue.call(input, value);
+            input.dispatchEvent(new Event("input", { bubbles: true }));
         });
     })()`);
 
@@ -324,6 +339,65 @@ try {
     await waitFor(`document.readyState === "complete"`);
     await waitFor(`document.body.innerText.includes(${JSON.stringify(HOME_TEXT)})`);
     check("Frontend and backend are live", (await readApi("/api/car/listings")).data.success);
+
+    if (process.env.E2E_SEARCH_SMOKE === "1") {
+        check(
+            "Logged-out navigation hides My Bookings",
+            !(await evaluate(
+                `[...document.querySelectorAll("nav a")].some((link) => link.textContent.trim() === "My Bookings")`
+            ))
+        );
+        await evaluate(`document.querySelector('input[type="search"]').focus()`);
+        await pause();
+        const focusStyle = await evaluate(`(() => {
+            const input = document.querySelector('input[type="search"]');
+            const wrapperStyle = getComputedStyle(input.closest("label"));
+            return {
+                outline: getComputedStyle(input).outlineStyle,
+                boxShadow: wrapperStyle.boxShadow,
+                borderColor: wrapperStyle.borderColor,
+                focusWithin: input.closest("label").matches(":focus-within"),
+            };
+        })()`);
+        check(
+            "Search uses one clean focus ring",
+            focusStyle.outline === "none" &&
+                focusStyle.boxShadow.includes("rgba(29, 78, 216, 0.1)") &&
+                focusStyle.borderColor === "rgb(29, 78, 216)",
+            JSON.stringify(focusStyle)
+        );
+
+        const searchTrafficStart = traffic.length;
+        await setSearchValues(["E2", "E2E", "E2E Toyota"]);
+        await waitUntil(
+            () =>
+                traffic
+                    .slice(searchTrafficStart)
+                    .some(
+                        (request) =>
+                            request.path === "/api/car/listings" &&
+                            request.search
+                    ),
+            10000
+        );
+        await waitFor(`document.body.innerText.includes("E2E Toyota")`);
+        const searchRequests = traffic
+            .slice(searchTrafficStart)
+            .filter(
+                (request) =>
+                    request.path === "/api/car/listings" &&
+                    request.search
+            );
+        check(
+            "Car search is debounced into one server request",
+            searchRequests.length === 1 &&
+                searchRequests[0].search === "E2E Toyota",
+            JSON.stringify(searchRequests)
+        );
+        console.log(JSON.stringify({ success: true, checks }, null, 2));
+        socket.close();
+        process.exit(0);
+    }
 
     await openAuth(true);
     await clickText("Business");
@@ -534,6 +608,27 @@ try {
             )
     );
     await logout();
+
+    await waitFor(`document.body.innerText.includes(${JSON.stringify(HOME_TEXT)})`);
+    const searchTrafficStart = traffic.length;
+    await setSearchValues(["E2E", "E2E Toyota", car.model]);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await waitFor(
+        `document.body.innerText.includes(${JSON.stringify(car.model)})`
+    );
+    const searchRequests = traffic
+        .slice(searchTrafficStart)
+        .filter(
+            (request) =>
+                request.path === "/api/car/listings" &&
+                request.search
+        );
+    check(
+        "Car search is debounced into one server request",
+        searchRequests.length === 1 &&
+            searchRequests[0].search === car.model,
+        JSON.stringify(searchRequests)
+    );
 
     await login(customer.email, customerPassword, "/", HOME_TEXT);
     const approvedCustomer = (await readApi("/api/user/data", customerToken)).data.user;
