@@ -5,6 +5,11 @@ import Loader from "../components/Loader";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import { motion } from "motion/react";
+import BookingAvailability from "../components/BookingAvailability";
+import {
+    nextDate,
+    useBookingAvailability
+} from "../hooks/useBookingAvailability";
 
 const DriverDetails = () => {
     const { id } = useParams();
@@ -25,6 +30,11 @@ const DriverDetails = () => {
     const [paymentDetails, setPaymentDetails] = useState(null);
     const [proofFile, setProofFile] = useState(null);
     const [uploadingProof, setUploadingProof] = useState(false);
+    const availability = useBookingAvailability({
+        endpoint: `/api/bookings/driver/${id}/availability`,
+        startDate,
+        endDate
+    });
 
     useEffect(() => {
         const load = async () => {
@@ -77,6 +87,10 @@ const DriverDetails = () => {
             toast.error("Pick start and end dates");
             return;
         }
+        if (availability.invalidRange || availability.conflict) {
+            toast.error("Please choose an available date range");
+            return;
+        }
         setSubmitting(true);
         try {
             const { data } = await axios.post("/api/bookings/driver/create", {
@@ -96,6 +110,9 @@ const DriverDetails = () => {
                 }
             } else {
                 toast.error(data.message);
+                if (/already booked/i.test(data.message || "")) {
+                    availability.refresh();
+                }
             }
         } catch (error) {
             const msg = error.response?.data?.message || error.message;
@@ -259,11 +276,16 @@ const DriverDetails = () => {
                             type="date"
                             value={endDate}
                             onChange={(e) => setEndDate(e.target.value)}
-                            min={startDate || new Date().toISOString().split("T")[0]}
+                            min={startDate ? nextDate(startDate) : nextDate()}
                             required
                             className="ui-field"
                         />
                     </div>
+
+                    <BookingAvailability
+                        {...availability}
+                        hasSelection={Boolean(startDate && endDate)}
+                    />
 
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-semibold text-slate-700">
@@ -319,7 +341,11 @@ const DriverDetails = () => {
                     )}
 
                     <button
-                        disabled={submitting}
+                        disabled={
+                            submitting ||
+                            availability.invalidRange ||
+                            Boolean(availability.conflict)
+                        }
                         className="ui-button min-h-12 w-full text-base disabled:opacity-60"
                     >
                         {submitting ? "Submitting…" : "Hire Driver"}

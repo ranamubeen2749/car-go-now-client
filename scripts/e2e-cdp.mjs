@@ -200,6 +200,12 @@ const clickText = async (text, selector = "button", container = "body") => {
 };
 
 const clickRowAction = async (needle, action, acceptConfirm = false) => {
+    await waitFor(`[...document.querySelectorAll("tr")].some((row) =>
+        row.innerText.includes(${JSON.stringify(needle)}) &&
+        [...row.querySelectorAll("button")].some((button) =>
+            button.textContent.trim() === ${JSON.stringify(action)}
+        )
+    )`);
     await evaluate(`(() => {
         if (${JSON.stringify(acceptConfirm)}) window.confirm = () => true;
         const row = [...document.querySelectorAll("tr")]
@@ -612,7 +618,17 @@ try {
     await waitFor(`document.body.innerText.includes(${JSON.stringify(HOME_TEXT)})`);
     const searchTrafficStart = traffic.length;
     await setSearchValues(["E2E", "E2E Toyota", car.model]);
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    await waitUntil(
+        async () =>
+            traffic
+                .slice(searchTrafficStart)
+                .some(
+                    request =>
+                        request.path === "/api/car/listings" &&
+                        request.search === car.model
+                ),
+        5000
+    );
     await waitFor(
         `document.body.innerText.includes(${JSON.stringify(car.model)})`
     );
@@ -868,8 +884,50 @@ try {
         );
     });
     check("Customer submitted completed-booking review through UI", true);
+    await waitFor(`document.body.innerText.includes("Review submitted")`);
+    const reviewedCarBooking = await waitUntil(async () => {
+        const bookings = await readApi(
+            "/api/bookings/car/my-bookings",
+            customerToken
+        );
+        return bookings.data.bookings?.find(
+            item => item._id === prepaidBooking._id && item.reviewed
+        );
+    });
+    check("Reviewed car booking stays marked after refresh", Boolean(reviewedCarBooking));
 
     await navigate(`/car-details/${createdCar._id}`, car.model);
+    await waitFor(`document.body.innerText.includes("Manual browser E2E review")`);
+    check("Car detail displays submitted reviews", true);
+    await waitFor(`document.body.innerText.includes("Date availability")`);
+    const carAvailability = (
+        await readApi(`/api/bookings/car/${createdCar._id}/availability`)
+    ).data;
+    check(
+        "Public car availability returns date ranges without booking details",
+        carAvailability.success &&
+            carAvailability.inclusive === true &&
+            carAvailability.unavailableRanges.some(
+                range =>
+                    range.startDate === date(pickup) &&
+                    range.endDate === date(returned) &&
+                    Object.keys(range).length === 2
+            )
+    );
+    await setValues("#pickup-date, #return-date", [
+        date(pickup),
+        date(returned),
+    ]);
+    await waitFor(
+        `document.body.innerText.includes("overlap an existing booking")`
+    );
+    check(
+        "Car booking form blocks an unavailable date range",
+        await evaluate(
+            `[...document.querySelectorAll("button")].find((button) => button.textContent.trim() === "Book Now")?.disabled`
+        )
+    );
+
     const cashPickup = new Date(returned);
     cashPickup.setUTCDate(cashPickup.getUTCDate() + 5);
     const cashReturn = new Date(cashPickup);
@@ -880,6 +938,7 @@ try {
         date(cashPickup),
         date(cashReturn),
     ]);
+    await waitFor(`document.body.innerText.includes("selected dates are available")`);
     await setValues("form textarea", ["Manual self-drive cancellation"]);
     await clickText("Book Now");
     await waitFor(`location.pathname === "/my-bookings"`);
@@ -908,6 +967,57 @@ try {
         );
     });
     check("Verified customer self-drive booking and cancellation through UI", true);
+
+    const rejectionPickup = new Date(cashReturn);
+    rejectionPickup.setUTCDate(rejectionPickup.getUTCDate() + 5);
+    const rejectionReturn = new Date(rejectionPickup);
+    rejectionReturn.setUTCDate(rejectionReturn.getUTCDate() + 1);
+    await navigate(`/car-details/${createdCar._id}`, car.model);
+    await clickText("Self-drive");
+    await clickText("Cash on pickup");
+    await setValues("#pickup-date, #return-date", [
+        date(rejectionPickup),
+        date(rejectionReturn),
+    ]);
+    await waitFor(`document.body.innerText.includes("selected dates are available")`);
+    await setValues("form textarea", ["Customer note preserved after rejection"]);
+    await clickText("Book Now");
+    await waitFor(`location.pathname === "/my-bookings"`);
+    const rejectionBooking = await waitUntil(async () => {
+        const bookings = await readApi(
+            "/api/bookings/car/my-bookings",
+            customerToken
+        );
+        return bookings.data.bookings?.find(
+            item => item.description === "Customer note preserved after rejection"
+        );
+    });
+    await logout();
+
+    await login(owner.email, password, "/owner", "Business Dashboard");
+    await navigate("/owner/manage-bookings", "Manage Bookings");
+    await clickRowAction(customer.email, "Reject");
+    await setValues(".fixed textarea", ["Vehicle unavailable after inspection"]);
+    await clickText("Reject", "button", ".fixed");
+    await waitUntil(async () => {
+        const bookings = await readApi("/api/bookings/owner", ownerToken);
+        return bookings.data.bookings?.find(
+            item =>
+                item._id === rejectionBooking._id &&
+                item.status === "rejected" &&
+                item.rejectionReason === "Vehicle unavailable after inspection" &&
+                item.description === "Customer note preserved after rejection"
+        );
+    });
+    check("Owner rejection preserves notes and stores a dedicated reason", true);
+    await logout();
+
+    await login(customer.email, customerPassword, "/", HOME_TEXT);
+    await navigate("/my-bookings", car.model);
+    await waitFor(
+        `document.body.innerText.includes("Vehicle unavailable after inspection")`
+    );
+    check("Customer booking card displays the rejection reason", true);
 
     await evaluate(`[...document.querySelectorAll('button[title="Notifications"]')]
         .find((button) => button.offsetParent !== null).click()`);
@@ -1199,6 +1309,45 @@ try {
         );
     });
     check("Customer reviewed independent driver through UI", true);
+    await waitFor(`document.body.innerText.includes("Review submitted")`);
+    const reviewedDriverBooking = await waitUntil(async () => {
+        const bookings = await readApi(
+            "/api/bookings/driver/my-bookings",
+            customerToken
+        );
+        return bookings.data.bookings?.find(
+            item => item._id === independentDriverBooking._id && item.reviewed
+        );
+    });
+    check(
+        "Reviewed driver booking stays marked after refresh",
+        Boolean(reviewedDriverBooking)
+    );
+    await navigate(
+        `/driver-details/${independentDriverProfile._id}`,
+        independentDriver.name
+    );
+    await waitFor(
+        `document.body.innerText.includes("Manual browser independent-driver review")`
+    );
+    check("Driver detail displays submitted reviews", true);
+    await waitFor(`document.body.innerText.includes("Date availability")`);
+    const driverAvailability = (
+        await readApi(
+            `/api/bookings/driver/${independentDriverProfile._id}/availability`
+        )
+    ).data;
+    check(
+        "Public driver availability returns date ranges without booking details",
+        driverAvailability.success &&
+            driverAvailability.inclusive === true &&
+            driverAvailability.unavailableRanges.some(
+                range =>
+                    range.startDate === date(driverStart) &&
+                    range.endDate === date(driverEnd) &&
+                    Object.keys(range).length === 2
+            )
+    );
     await logout();
 
     await login(ADMIN_EMAIL, ADMIN_PASSWORD, "/admin", "Admin Dashboard");
@@ -1367,6 +1516,13 @@ try {
             (item) => item.name === owner.business && item.status === "blocked"
         );
     });
+    const blockedCarAvailability = (
+        await readApi(`/api/bookings/car/${createdCar._id}/availability`)
+    ).data;
+    check(
+        "Blocked business car availability is private",
+        blockedCarAvailability.success === false
+    );
     await waitFor(
         `[...document.querySelectorAll("tr")].some((row) =>
             row.innerText.includes(${JSON.stringify(owner.business)}) &&

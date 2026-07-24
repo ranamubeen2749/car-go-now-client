@@ -47,6 +47,7 @@ const MyBookings = () => {
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState("");
     const [rateDriver, setRateDriver] = useState(false);
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     const fetchBookings = useCallback(async () => {
         if (!user) return;
@@ -117,6 +118,7 @@ const MyBookings = () => {
 
     const handleSubmitReview = async () => {
         if (!reviewTarget) return;
+        setSubmittingReview(true);
         try {
             const payload = { bookingId: reviewTarget._id, rating, comment };
             let endpoint;
@@ -139,6 +141,8 @@ const MyBookings = () => {
             }
         } catch (error) {
             toast.error(error.response?.data?.message || error.message);
+        } finally {
+            setSubmittingReview(false);
         }
     };
 
@@ -242,7 +246,10 @@ const MyBookings = () => {
                         (booking.status === "awaiting_payment_proof" ||
                             (booking.paymentMethod === "prepaid" &&
                                 booking.paymentStatus === "awaiting_proof"));
-                    const canReview = booking.status === "completed";
+                    const canReview = booking.status === "completed" && !booking.reviewed;
+                    const rejectionReason =
+                        booking.rejectionReason ||
+                        (booking.status === "rejected" ? booking.description : "");
 
                     return (
                         <motion.div
@@ -378,6 +385,16 @@ const MyBookings = () => {
                                         The payment-proof upload window has expired.
                                     </p>
                                 )}
+                                {booking.status === "rejected" && rejectionReason && (
+                                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
+                                        <p className="text-xs font-bold uppercase tracking-wide text-red-700">
+                                            Rejection reason
+                                        </p>
+                                        <p className="mt-1 text-sm leading-6 text-red-700">
+                                            {rejectionReason}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Actions */}
                                 <div className="mt-5 flex flex-wrap gap-2">
@@ -407,6 +424,11 @@ const MyBookings = () => {
                                         >
                                             Leave review
                                         </button>
+                                    )}
+                                    {booking.status === "completed" && booking.reviewed && (
+                                        <span className="inline-flex min-h-9 items-center rounded-xl bg-emerald-100 px-3 text-xs font-semibold text-emerald-700">
+                                            Review submitted
+                                        </span>
                                     )}
                                 </div>
                             </div>
@@ -553,9 +575,10 @@ const MyBookings = () => {
                             <button
                                 type="button"
                                 onClick={handleSubmitReview}
-                                className="ui-button flex-1"
+                                disabled={submittingReview}
+                                className="ui-button flex-1 disabled:opacity-60"
                             >
-                                Submit
+                                {submittingReview ? "Submitting…" : "Submit"}
                             </button>
                         </div>
                     </div>

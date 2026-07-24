@@ -5,6 +5,11 @@ import Loader from "../components/Loader";
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 import { motion } from "motion/react";
+import BookingAvailability from "../components/BookingAvailability";
+import {
+    nextDate,
+    useBookingAvailability
+} from "../hooks/useBookingAvailability";
 
 const CarDetails = () => {
     const { id } = useParams();
@@ -22,6 +27,8 @@ const CarDetails = () => {
 
     const [car, setCar] = useState(null);
     const [attachments, setAttachments] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [reviewSummary, setReviewSummary] = useState({ total: 0, average: null });
     const [activeImage, setActiveImage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -37,17 +44,32 @@ const CarDetails = () => {
     const [paymentDetails, setPaymentDetails] = useState(null);
     const [proofFile, setProofFile] = useState(null);
     const [uploadingProof, setUploadingProof] = useState(false);
+    const availability = useBookingAvailability({
+        endpoint: `/api/bookings/car/${id}/availability`,
+        startDate: pickupDate,
+        endDate: returnDate
+    });
 
     useEffect(() => {
         const fetchCar = async () => {
             setLoading(true);
             try {
-                const { data } = await axios.get(`/api/car/${id}`);
+                const [{ data }, reviewsResponse] = await Promise.all([
+                    axios.get(`/api/car/${id}`),
+                    axios.get(`/api/reviews/car/${id}`).catch(() => null)
+                ]);
                 if (data.success) {
                     setCar(data.car);
                     setAttachments(data.attachments || []);
                 } else {
                     toast.error(data.message || "Car not found");
+                }
+                if (reviewsResponse?.data?.success) {
+                    setReviews(reviewsResponse.data.reviews || []);
+                    setReviewSummary({
+                        total: reviewsResponse.data.pagination?.total || 0,
+                        average: reviewsResponse.data.avgRating
+                    });
                 }
             } catch (error) {
                 toast.error(error.response?.data?.message || error.message);
@@ -92,6 +114,10 @@ const CarDetails = () => {
             toast.error("Please pick both dates");
             return;
         }
+        if (availability.invalidRange || availability.conflict) {
+            toast.error("Please choose an available date range");
+            return;
+        }
 
         setSubmitting(true);
         try {
@@ -115,6 +141,9 @@ const CarDetails = () => {
                 }
             } else {
                 toast.error(data.message || "Failed to create booking");
+                if (/already booked/i.test(data.message || "")) {
+                    availability.refresh();
+                }
             }
         } catch (error) {
             const msg = error.response?.data?.message || error.message;
@@ -254,6 +283,45 @@ const CarDetails = () => {
                             <h2 className="mb-3 text-xl font-semibold text-ink">Description</h2>
                             <p className="leading-7 text-muted">{car.description}</p>
                         </div>
+
+                        <div className="border-t border-borderColor pt-7">
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <h2 className="text-xl font-semibold text-ink">Reviews</h2>
+                                <span className="text-sm text-muted">
+                                    {reviewSummary.average
+                                        ? `★ ${reviewSummary.average} · `
+                                        : ""}
+                                    {reviewSummary.total}{" "}
+                                    {reviewSummary.total === 1 ? "review" : "reviews"}
+                                </span>
+                            </div>
+                            {reviews.length === 0 ? (
+                                <div className="rounded-2xl bg-slate-50 p-5 text-sm text-muted">
+                                    No reviews yet.
+                                </div>
+                            ) : (
+                                reviews.map(review => (
+                                    <div
+                                        key={review._id}
+                                        className="border-t border-borderColor py-4 first:border-t-0"
+                                    >
+                                        <div className="flex items-center justify-between text-sm">
+                                            <p className="font-semibold text-ink">
+                                                {review.user?.name || "Anonymous"}
+                                            </p>
+                                            <p className="font-semibold text-amber-500">
+                                                ★ {review.rating}
+                                            </p>
+                                        </div>
+                                        {review.comment && (
+                                            <p className="mt-2 text-sm leading-6 text-muted">
+                                                {review.comment}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </motion.div>
 
@@ -340,9 +408,14 @@ const CarDetails = () => {
                             className="ui-field"
                             required
                             id="return-date"
-                            min={pickupDate || new Date().toISOString().split("T")[0]}
+                            min={pickupDate ? nextDate(pickupDate) : nextDate()}
                         />
                     </div>
+
+                    <BookingAvailability
+                        {...availability}
+                        hasSelection={Boolean(pickupDate && returnDate)}
+                    />
 
                     <div className="flex flex-col gap-2">
                         <label className="text-sm font-semibold text-slate-700">Pickup time</label>
@@ -416,7 +489,11 @@ const CarDetails = () => {
                     )}
 
                     <button
-                        disabled={submitting}
+                        disabled={
+                            submitting ||
+                            availability.invalidRange ||
+                            Boolean(availability.conflict)
+                        }
                         className="ui-button min-h-12 w-full text-base disabled:opacity-60"
                     >
                         {submitting ? "Submitting…" : "Book Now"}
